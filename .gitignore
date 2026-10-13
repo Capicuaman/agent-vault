@@ -1,0 +1,23 @@
+# State files that are machine-local (never share)
+**/.herenow/state.json
+**/.skill-lock.json
+**/state.json
+
+# Editor and OS artifacts
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local override files (machine-specific, not for sharing)
+configs/local-*.toml
+instance-configs/local-*.toml
+
+# Node / Python artifacts (if any skill has tooling)
+node_modules/
+__pycache__/
+*.pyc
+.env

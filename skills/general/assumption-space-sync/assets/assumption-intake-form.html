@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Assumption Space Sync — Intake Form</title>
+<style>
+  :root{
+    --ink:#1a1614;
+    --ink-soft:#4a3f38;
+    --paper:#f7f1e8;
+    --paper-2:#efe6d6;
+    --line:#d9cdb8;
+    --sun:#d97748;
+    --sea:#2f6b7a;
+    --sea-deep:#1c4552;
+    --alert:#a8371a;
+    --ok:#446b3b;
+    --warn:#c7a128;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;font-size:15px}
+  .wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+  header{border-bottom:2px solid var(--line);padding-bottom:24px;margin-bottom:32px}
+  h1{font-size:clamp(28px,5vw,42px);margin:0 0 8px;letter-spacing:-0.01em}
+  .sub{font-size:17px;color:var(--ink-soft);max-width:70ch}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 12px}
+  button{font:inherit;padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink-soft)}
+  button.primary{background:var(--sea);color:#fff;border-color:var(--sea)}
+  button.warn{background:var(--sun);color:#fff;border-color:var(--sun)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;background:#fff;border:1px solid var(--line)}
+  th,td{padding:10px 12px;border:1px solid var(--line);vertical-align:top}
+  th{background:var(--paper-2);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--sea-deep);text-align:left}
+  td textarea,td input{width:100%;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--paper);resize:vertical;min-height:28px}
+  td textarea{min-height:52px}
+  td input[type="number"]{width:70px}
+  select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--paper)}
+  tr.critical td:first-child{border-left:4px solid var(--alert)}
+  tr.important td:first-child{border-left:4px solid var(--warn)}
+  tr.cosmetic td:first-child{border-left:4px solid var(--sea)}
+  tr.synced{background:#e8efdf}
+  .id-cell{font-family:ui-monospace,SF Mono,Menlo,monospace;font-size:12px;color:var(--sea-deep)}
+  .footer{margin-top:40px;padding-top:20px;border-top:2px solid var(--line);color:var(--ink-soft);font-size:13px}
+  .export-box{background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:16px;margin-top:16px;font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0;font-size:12px;color:var(--ink-soft)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Assumption Space Sync</h1>
+  <p class="sub">Document every fact that arrived from discovery, intake, or stakeholder conversation. Map each assumption to the files it invalidates. Export, commit, then propagate.</p>
+  <div class="toolbar">
+    <button class="primary" onclick="addRow()">+ Add assumption</button>
+    <button onclick="exportJSON()">Export JSON</button>
+    <button onclick="exportMarkdown()">Export Markdown</button>
+    <button class="warn" onclick="clearAll()">Clear all</button>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--alert)"></span> Critical (legal/financial risk)</span>
+    <span><span class="dot" style="background:var(--warn)"></span> Important (user confusion)</span>
+    <span><span class="dot" style="background:var(--sea)"></span> Cosmetic (nice to fix)</span>
+    <span><span class="dot" style="background:#446b3b"></span> Synced</span>
+  </div>
+</header>
+
+<table id="grid">
+  <thead>
+    <tr>
+      <th style="width:110px">ID</th>
+      <th>Old belief (what files say now)</th>
+      <th>New fact (what intake revealed)</th>
+      <th style="width:110px">Confidence</th>
+      <th>Affected files (paths / globs)</th>
+      <th style="width:100px">Impact</th>
+      <th style="width:100px">Status</th>
+      <th style="width:40px">×</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div class="footer">
+  <strong>Usage:</strong> Fill rows → Export JSON → Save to <code>discovery/assumptions-YYYY-MM-DD.json</code> → Commit baseline → Propagate file-by-file → Mark synced → Re-export → Append to <code>tasks/todo.md</code>.
+</div>
+
+<div id="exportBox" style="display:none">
+  <strong>Export:</strong>
+  <div class="export-box" id="exportContent"></div>
+</div>
+</div>
+
+<script>
+let nextId = 1;
+const tbody = document.getElementById('tbody');
+
+function addRow(data={}){
+  const tr = document.createElement('tr');
+  const id = data.id || ('ASM-' + String(nextId++).padStart(3,'0'));
+  tr.dataset.id = id;
+  tr.className = data.impact || 'important';
+  if(data.status==='synced') tr.classList.add('synced');
+  tr.innerHTML = `
+    <td class="id-cell">${id}</td>
+    <td><textarea placeholder="e.g. '3 heirs' or 'mom is sick'">${esc(data.oldBelief||'')}</textarea></td>
+    <td><textarea placeholder="e.g. '4 heirs (user + 3 sisters)' or 'mom is alive and competent'">${esc(data.newFact||'')}</textarea></td>
+    <td>
+      <select>
+        <option value="confirmed" ${data.confidence==='confirmed'?'selected':''}>confirmed</option>
+        <option value="likely" ${data.confidence==='likely'?'selected':''}>likely</option>
+        <option value="hearsay" ${data.confidence==='hearsay'?'selected':''}>hearsay</option>
+      </select>
+    </td>
+    <td><textarea placeholder="e.g. 02_legal_tax/*.html, 03_pricing/*.md">${esc(data.files||'')}</textarea></td>
+    <td>
+      <select onchange="updateRowColor(this)">
+        <option value="critical" ${data.impact==='critical'?'selected':''}>critical</option>
+        <option value="important" ${data.impact==='important'||!data.impact?'selected':''}>important</option>
+        <option value="cosmetic" ${data.impact==='cosmetic'?'selected':''}>cosmetic</option>
+      </select>
+    </td>
+    <td>
+      <select onchange="updateSync(this)">
+        <option value="pending" ${data.status==='pending'||!data.status?'selected':''}>pending</option>
+        <option value="in-progress" ${data.status==='in-progress'?'selected':''}>in-progress</option>
+        <option value="synced" ${data.status==='synced'?'selected':''}>synced</option>
+        <option value="blocked" ${data.status==='blocked'?'selected':''}>blocked</option>
+      </select>
+    </td>
+    <td><button onclick="this.closest('tr').remove()">×</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function updateRowColor(sel){
+  sel.closest('tr').className = sel.value + (sel.closest('tr').querySelector('td:nth-child(7) select').value==='synced'?' synced':'');
+}
+function updateSync(sel){
+  const tr = sel.closest('tr');
+  tr.className = tr.querySelector('td:nth-child(6) select').value + (sel.value==='synced'?' synced':'');
+}
+
+function esc(s){ return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function getRows(){
+  return [...tbody.querySelectorAll('tr')].map(tr=>{
+    const tds = tr.querySelectorAll('td');
+    return {
+      id: tr.dataset.id,
+      oldBelief: tds[1].querySelector('textarea').value.trim(),
+      newFact: tds[2].querySelector('textarea').value.trim(),
+      confidence: tds[3].querySelector('select').value,
+      files: tds[4].querySelector('textarea').value.trim(),
+      impact: tds[5].querySelector('select').value,
+      status: tds[6].querySelector('select').value
+    };
+  });
+}
+
+function exportJSON(){
+  const rows = getRows();
+  const payload = {
+    exported: new Date().toISOString(),
+    project: 'PROJECT_NAME',
+    assumptionCount: rows.length,
+    criticalCount: rows.filter(r=>r.impact==='critical').length,
+    pendingCount: rows.filter(r=>r.status!=='synced').length,
+    assumptions: rows
+  };
+  show(JSON.stringify(payload,null,2));
+}
+
+function exportMarkdown(){
+  const rows = getRows();
+  let md = `# Assumption Sync — ${new Date().toISOString().slice(0,10)}\n\n`;
+  md += `| ID | Old Belief | New Fact | Confidence | Files | Impact | Status |\n`;
+  md += `|---|---|---|---|---|---|---|\n`;
+  for(const r of rows){
+    md += `| ${r.id} | ${r.oldBelief} | ${r.newFact} | ${r.confidence} | ${r.files} | ${r.impact} | ${r.status} |\n`;
+  }
+  md += `\n## Next steps\n- [ ] Commit baseline\n- [ ] Propagate critical assumptions first\n- [ ] Propagate important assumptions second\n- [ ] Update index/overview files last\n- [ ] Log completion in tasks/todo.md\n`;
+  show(md);
+}
+
+function show(text){
+  const box = document.getElementById('exportBox');
+  const content = document.getElementById('exportContent');
+  content.textContent = text;
+  box.style.display = 'block';
+  content.scrollTop = 0;
+}
+
+function clearAll(){
+  if(!confirm('Delete all rows?')) return;
+  tbody.innerHTML = '';
+  nextId = 1;
+  document.getElementById('exportBox').style.display = 'none';
+}
+
+// Seed with example row
+addRow({
+  id:'ASM-001',
+  oldBelief:'3 heirs total',
+  newFact:'4 heirs (user + 3 sisters)',
+  confidence:'confirmed',
+  files:'02_legal_tax/*.html, 02_legal_tax/*.md, 03_pricing/*.md, 03_pricing/*.html',
+  impact:'critical',
+  status:'pending'
+});
+addRow({
+  id:'ASM-002',
+  oldBelief:'Mom is sick / declining',
+  newFact:'Mom is alive and fully competent',
+  confidence:'confirmed',
+  files:'02_legal_tax/*.html, 02_legal_tax/*.md, 03_pricing/*.md',
+  impact:'critical',
+  status:'pending'
+});
+</script>
+</body>
+</html>
