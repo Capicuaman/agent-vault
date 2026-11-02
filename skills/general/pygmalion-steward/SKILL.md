@@ -156,6 +156,13 @@ Full procedures: [`references/administer.md`](references/administer.md) and
 - **Does not judge software design.** For that, `genie-doctrine` and the genie
   family own the lens.
 
+## Rendered reference
+
+A self-contained HTML rendering of the taxonomy, layers, families, producer rule,
+health states and glossary lives at
+[`assets/taxonomy-site/index.html`](assets/taxonomy-site/index.html). Publish it
+with the `here-now` skill; the vault copy is the source of truth.
+
 ## Hand-offs
 
 | Need | Use |

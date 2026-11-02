@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Entity System — Agent Vault Taxonomy</title>
+<meta name="description" content="A taxonomy for agent entities: families, roles, layers, and the tests that keep a corpus coherent.">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --panel: #ffffff;
+    --ink: #1c1b19;
+    --muted: #6b6862;
+    --line: #e5e1d8;
+    --accent: #3f4b8f;
+    --accent-soft: #eef0f8;
+    --warn: #8a5a00;
+    --warn-soft: #fdf3e0;
+    --bad: #8c2f2f;
+    --bad-soft: #fbeceb;
+    --ok: #2f6b45;
+    --ok-soft: #eaf4ee;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+    --measure: 72ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14140f;
+      --panel: #1b1b16;
+      --ink: #eae7de;
+      --muted: #9c978a;
+      --line: #2e2d26;
+      --accent: #a8b3f0;
+      --accent-soft: #1f2130;
+      --warn: #e0b05e;
+      --warn-soft: #2a2318;
+      --bad: #e08a86;
+      --bad-soft: #2b1c1b;
+      --ok: #8fc9a4;
+      --ok-soft: #1a2620;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 96px; }
+  header.hero {
+    padding: 88px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 56px;
+  }
+  .kicker {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
+  }
+  h1 {
+    font-size: clamp(34px, 5vw, 56px); line-height: 1.05; margin: 0 0 18px;
+    letter-spacing: -0.02em; font-weight: 650;
+  }
+  .lede { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 62ch; margin: 0; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 28px;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
+  .meta span::before { content: "· "; opacity: .5; }
+  .meta span:first-child::before { content: ""; }
+
+  nav.toc {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 64px;
+  }
+  nav.toc a {
+    font-size: 13px; color: var(--muted); text-decoration: none;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+    background: var(--panel);
+  }
+  nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+
+  section { margin: 0 0 72px; scroll-margin-top: 24px; }
+  h2 {
+    font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+    font-family: var(--mono); color: var(--muted); font-weight: 500;
+    margin: 0 0 8px;
+  }
+  h2 + .h2sub {
+    font-size: clamp(24px, 3vw, 32px); line-height: 1.2; letter-spacing: -0.015em;
+    margin: 0 0 24px; font-weight: 620; max-width: 34ch;
+  }
+  p, li { max-width: var(--measure); }
+  p { margin: 0 0 18px; }
+  a { color: var(--accent); }
+  code {
+    font-family: var(--mono); font-size: .88em; background: var(--accent-soft);
+    padding: .12em .38em; border-radius: 4px;
+  }
+
+  .callout {
+    border: 1px solid var(--line); background: var(--panel);
+    border-left: 3px solid var(--accent); border-radius: 6px;
+    padding: 20px 24px; margin: 28px 0; max-width: var(--measure);
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout strong { font-weight: 640; }
+
+  .grid { display: grid; gap: 14px; }
+  .grid.two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 620; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); max-width: none; }
+  .card .num {
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+    letter-spacing: .1em; display: block; margin-bottom: 8px;
+  }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
+    background: var(--bg); white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  td code { white-space: nowrap; }
+
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .pill.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+  .pill.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+  .pill.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+
+  /* layer stack */
+  .stack { display: grid; gap: 6px; margin: 8px 0 24px; }
+  .layer {
+    display: grid; grid-template-columns: 56px 1fr; align-items: baseline;
+    gap: 16px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 6px; padding: 13px 18px;
+  }
+  .layer .lvl { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .06em; }
+  .layer .role { font-weight: 620; font-size: 14px; }
+  .layer .who { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .layer.l1 { border-color: var(--accent); }
+  .layer.l6 { border-style: dashed; }
+  .layer .who code { background: transparent; padding: 0; font-size: .95em; }
+
+  pre {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.65;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 20px; overflow-x: auto; margin: 20px 0;
+  }
+
+  dl.glossary { display: grid; gap: 0; margin: 0; max-width: 88ch; }
+  dl.glossary > div {
+    display: grid; grid-template-columns: 220px 1fr; gap: 24px;
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  dl.glossary > div:last-child { border-bottom: none; }
+  dt { font-weight: 620; font-size: 14px; }
+  dt code { font-weight: 400; }
+  dd { margin: 0; font-size: 14px; color: var(--muted); }
+  dd strong { color: var(--ink); font-weight: 600; }
+
+  .rule {
+    display: grid; grid-template-columns: 84px 1fr; gap: 18px; align-items: baseline;
+    padding: 16px 0; border-bottom: 1px solid var(--line);
+  }
+  .rule:last-child { border-bottom: none; }
+  .rule .tag { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+  .rule p { margin: 0; font-size: 15px; max-width: 66ch; }
+
+  footer {
+    border-top: 1px solid var(--line); padding-top: 28px; margin-top: 24px;
+    font-size: 13px; color: var(--muted);
+  }
+  footer p { max-width: 70ch; }
+  footer code { background: transparent; padding: 0; }
+
+  @media (max-width: 640px) {
+    dl.glossary > div { grid-template-columns: 1fr; gap: 4px; }
+    .rule { grid-template-columns: 1fr; gap: 4px; }
+    header.hero { padding-top: 56px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="kicker">Agent Vault · Taxonomy v1</div>
+    <h1>The Entity System</h1>
+    <p class="lede">
+      A taxonomy for agents that build agents. What an entity is, which family it
+      belongs to, where it sits, and the tests that keep the corpus from quietly
+      rotting.
+    </p>
+    <div class="meta">
+      <span>source: agent-vault</span>
+      <span>governed by <code>pygmalion-steward</code></span>
+      <span>audit: <code>vault-audit.py</code></span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#entity">Entity</a>
+    <a href="#laws">Three laws</a>
+    <a href="#layers">Layers</a>
+    <a href="#families">Families</a>
+    <a href="#distinctions">Distinctions</a>
+    <a href="#climb">Terminal climb</a>
+    <a href="#health">Health</a>
+    <a href="#glossary">Glossary</a>
+  </nav>
+
+  <!-- ENTITY -->
+  <section id="entity">
+    <h2>01 — Definition</h2>
+    <p class="h2sub">An entity is a file that changes behavior at the moment of use.</p>
+    <p>
+      Not every useful paragraph is an entity. To count, a thing must satisfy all
+      five conditions below. Anything missing one is a <em>draft</em>, not an entity.
+    </p>
+    <div class="grid two">
+      <div class="card"><span class="num">01</span><h3>Identity</h3><p>A unique lowercase kebab-case name that matches its directory.</p></div>
+      <div class="card"><span class="num">02</span><h3>Routing contract</h3><p>A description that decides when it is invoked. The most consequential line in the file.</p></div>
+      <div class="card"><span class="num">03</span><h3>Body</h3><p>A procedure, a lens, or a procedure with examples. Something that does work.</p></div>
+      <div class="card"><span class="num">04</span><h3>Home</h3><p>Exactly one scope: vault source plus its install target. Global or project, never both.</p></div>
+      <div class="card"><span class="num">05</span><h3>Registry line</h3><p>One authoritative listing. An unlisted entity is invisible to the next audit.</p></div>
+    </div>
+  </section>
+
+  <!-- LAWS -->
+  <section id="laws">
+    <h2>02 — Principles</h2>
+    <p class="h2sub">Three laws that decide what survives.</p>
+
+    <div class="rule">
+      <span class="tag">Law 1</span>
+      <p><strong>Behavior delta.</strong> An entity earns its existence only by changing behavior at the moment of use. If <code>behavior(with) == behavior(without)</code>, it is decoration.</p>
+    </div>
+    <div class="rule">
+      <span class="tag">Law 2</span>
+      <p><strong>Routing contract.</strong> Expectations embedded in the description shape the behavior it produces. A vague description does not merely route poorly; it licenses vague work.</p>
+    </div>
+    <div class="rule">
+      <span class="tag">Law 3</span>
+      <p><strong>Drift.</strong> Statues crumble silently. Nothing fails loudly when a registry goes stale or a technology ships a new version. The corpus keeps answering from an old map.</p>
+    </div>
+  </section>
+
+  <!-- LAYERS -->
+  <section id="layers">
+    <h2>03 — Organization</h2>
+    <p class="h2sub">Seven layers, from intent to audit.</p>
+    <div class="stack">
+      <div class="layer"><span class="lvl">L0</span><div><span class="role">Operator</span><span class="who">intent · approval · trust</span></div></div>
+      <div class="layer l1"><span class="lvl">L1</span><div><span class="role">Governance</span><span class="who"><code>pygmalion-steward</code> · <code>registries/_*-pattern.md</code></span></div></div>
+      <div class="layer"><span class="lvl">L2</span><div><span class="role">Production</span><span class="who">forges — <code>nerd-forge</code>, <code>instruction-skill-forge</code>, <code>prompt-pattern-forge</code></span></div></div>
+      <div class="layer"><span class="lvl">L3</span><div><span class="role">Detection</span><span class="who">scouts — <code>forge-scout</code></span></div></div>
+      <div class="layer"><span class="lvl">L4</span><div><span class="role">Knowledge</span><span class="who">doctrines · system prompts · prompt patterns</span></div></div>
+      <div class="layer"><span class="lvl">L5</span><div><span class="role">Corpus</span><span class="who">nerds · genies · skills · drill packs · prompts</span></div></div>
+      <div class="layer l6"><span class="lvl">L6</span><div><span class="role">Audit</span><span class="who">forge-nerds — keep a corpus true, amend the spec</span></div></div>
+    </div>
+    <div class="callout">
+      <p><strong>Authority flows down.</strong> The operator sets intent; the steward decides what exists; producers execute; lenses inform; auditors correct the law. A producer that starts deciding has overstepped into governance.</p>
+    </div>
+  </section>
+
+  <!-- FAMILIES -->
+  <section id="families">
+    <h2>04 — Families</h2>
+    <p class="h2sub">Twelve families, each with one job.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Family</th><th>Naming</th><th>Role</th><th>Produces</th><th>Terminal</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Steward</strong></td><td><code>*-steward</code></td><td>governance</td><td>decisions, intake cards</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td><strong>Doctrine</strong></td><td><code>*-doctrine</code></td><td>knowledge</td><td>judgment — no artifact</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td><strong>Forge</strong></td><td><code>*-forge</code></td><td>production</td><td>artifacts to a declared shape</td><td><span class="pill">no</span></td></tr>
+          <tr><td><strong>Forge-nerd</strong></td><td><code>*-forge-nerd</code></td><td>audit</td><td>audits, spec amendments</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td><strong>Scout</strong></td><td><code>*-scout</code></td><td>detection</td><td>opportunity cards</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td><strong>Nerd</strong></td><td><code>*-nerd</code></td><td>corpus</td><td>grounded answers</td><td><span class="pill">no</span></td></tr>
+          <tr><td><strong>Genie</strong></td><td><code>genie-*</code></td><td>corpus</td><td>transferable lessons</td><td><span class="pill">no</span></td></tr>
+          <tr><td><strong>Skill</strong></td><td><code>skills/&lt;cat&gt;/&lt;name&gt;/</code></td><td>corpus</td><td>changed behavior</td><td><span class="pill">no</span></td></tr>
+          <tr><td><strong>Registry</strong></td><td><code>_*-pattern.md</code></td><td>governance</td><td>conformance</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td><strong>Drill pack</strong></td><td><code>examples/*.md</code></td><td>corpus</td><td>practice</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td><strong>Prompt</strong></td><td><code>prompts/*.md</code></td><td>corpus</td><td>a better first turn</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td><strong>System prompt</strong></td><td><code>system-prompts/*.md</code></td><td>knowledge</td><td>consistent posture</td><td><span class="pill ok">yes</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- DISTINCTIONS -->
+  <section id="distinctions">
+    <h2>05 — Distinctions</h2>
+    <p class="h2sub">The three boundaries that cause the most confusion.</p>
+
+    <h3 style="font-size:18px;margin:32px 0 8px;">Doctrine · Steward · Forge</h3>
+    <p>Separate them by their main verb. This is a five-second test, not a philosophy seminar.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Family</th><th>Verb</th><th>Input</th><th>Output</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Doctrine</strong></td><td><code>judge</code></td><td>a situation to evaluate</td><td>judgment</td></tr>
+          <tr><td><strong>Steward</strong></td><td><code>decide</code></td><td>a request for an entity</td><td>a decision record</td></tr>
+          <tr><td><strong>Forge</strong></td><td><code>produce</code></td><td>a settled decision</td><td>an artifact of a declared shape</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <p>A doctrine with an intake flow has become a steward. A steward that builds has stolen a forge's job. A forge that decides <em>whether</em> to exist is a scout.</p>
+    </div>
+
+    <h3 style="font-size:18px;margin:40px 0 8px;">Stale · Drifted</h3>
+    <div class="grid two">
+      <div class="card"><h3>Stale</h3><p>Time passed. The snapshot date is older than the threshold. The facts may still be right.</p></div>
+      <div class="card"><h3>Drifted</h3><p>The world moved. The declared version no longer matches upstream. The entity is confidently wrong.</p></div>
+    </div>
+    <p style="margin-top:16px;">Test staleness with a date. Test drift with a <strong>probe</strong> — a declared, re-runnable, read-only command that returns the current upstream version.</p>
+
+    <h3 style="font-size:18px;margin:40px 0 8px;">The producer rule</h3>
+    <div class="callout">
+      <p><strong>A producer may produce corpus entities that sit below it. It may never produce producers or governance.</strong></p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Produces</th><th>Example</th><th>Legal?</th></tr></thead>
+        <tbody>
+          <tr><td>a corpus entity, below it</td><td><code>nerd-forge</code> → <code>*-nerd</code> (L2 → L5)</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td>a producer, same layer</td><td><code>forge-forge</code> (L2 → L2)</td><td><span class="pill bad">no</span> self-referential</td></tr>
+          <tr><td>governance, above it</td><td><code>steward-forge</code> (L2 → L1)</td><td><span class="pill bad">no</span> production must not manufacture deciders</td></tr>
+          <tr><td>encoded judgment</td><td><code>doctrine-forge</code> (L2 → L4)</td><td><span class="pill bad">no</span> judgment in a producer's coat</td></tr>
+          <tr><td>a corpus entity, layer-legal</td><td><code>genie-forge</code> (L2 → L5)</td><td><span class="pill ok">yes</span> if ripeness passes</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:16px;">Layer-legality is necessary, not sufficient. A layer-legal producer still needs ≥2 instances or named candidates, an explicit procedure, and observable quality variance.</p>
+  </section>
+
+  <!-- CLIMB -->
+  <section id="climb">
+    <h2>06 — Recursion</h2>
+    <p class="h2sub">Every family has a top. Climbing past it adds cost, not judgment.</p>
+<pre>prompt ─┐
+skill ──┼─→ forge ─→ forge-nerd (terminal)
+nerd ───┘              │
+                       └─→ registry (terminal)
+
+request ─→ steward (terminal)
+genie ───→ genie-doctrine (terminal)
+doctrine ─→ nothing above (a lens on a lens adds nothing)
+scout ────→ nothing above (detection is already the top)</pre>
+    <p><strong>Forbidden by construction:</strong> <code>forge-forge</code>, <code>steward-steward</code>, <code>doctrine-doctrine</code>, <code>nerd-forge-nerd-nerd</code>, <code>scout-forge</code>.</p>
+    <p>If you feel the need to climb again, the level below is under-specified. Fix the spec.</p>
+  </section>
+
+  <!-- HEALTH -->
+  <section id="health">
+    <h2>07 — Health</h2>
+    <p class="h2sub">Eight states. The audit names them so the steward can act.</p>
+    <div class="grid two">
+      <div class="card"><h3><span class="pill bad">zombie</span></h3><p>Fails to load — bad YAML, missing description, name ≠ directory. Silently absent. Fix first.</p></div>
+      <div class="card"><h3><span class="pill bad">ghost</span></h3><p>Something references an entity that does not exist. A claim about existence that is false.</p></div>
+      <div class="card"><h3><span class="pill bad">duplicate</span></h3><p>Two entities with ≥85% description overlap. Both route unreliably. Merge or sharpen.</p></div>
+      <div class="card"><h3><span class="pill warn">orphan</span></h3><p>Exists but no registry or catalog lists it. Invisible to the next audit.</p></div>
+      <div class="card"><h3><span class="pill warn">hollow</span></h3><p>No procedure, no references, no examples. Costs context, returns nothing.</p></div>
+      <div class="card"><h3><span class="pill warn">stale</span></h3><p>Dated grounding past the threshold. Old, but possibly still true.</p></div>
+      <div class="card"><h3><span class="pill warn">statue</span></h3><p>Never invoked. Diagnose the trigger before deleting — the description is usually the fault.</p></div>
+      <div class="card"><h3><span class="pill warn">drift</span></h3><p>Upstream moved. Loadable, internally consistent, and confidently wrong.</p></div>
+    </div>
+  </section>
+
+  <!-- GLOSSARY -->
+  <section id="glossary">
+    <h2>08 — Terms</h2>
+    <p class="h2sub">Normative definitions. When a word is capitalized, this is the authority.</p>
+    <dl class="glossary">
+      <div><dt>Entity</dt><dd>A file-backed, discoverable unit that changes agent behavior when routed to. Requires identity, routing contract, body, home, and registry line.</dd></div>
+      <div><dt>Corpus</dt><dd>The complete set of entities plus their registries and catalogs. Has <em>health</em>, not just content.</dd></div>
+      <div><dt>Family</dt><dd>A named class sharing an anatomy, a role, and a registry of record.</dd></div>
+      <div><dt>Role</dt><dd>A family's function in the organization chart: governance, production, detection, knowledge, audit, corpus.</dd></div>
+      <div><dt>Registry of record</dt><dd>The single file that authoritatively lists a family's members and its spec. Two registries for one family is a duplicate at the spec level.</dd></div>
+      <div><dt>Scope</dt><dd>Where an entity is loaded: vault source, global, or project. Part of its identity.</dd></div>
+      <div><dt>Echelon</dt><dd>The prompt → skill → agent level of a request. Orthogonal to family.</dd></div>
+      <div><dt>Doctrine</dt><dd>An entity whose only output is judgment. No output shape, read by others, terminal, prescriptive.</dd></div>
+      <div><dt>Steward</dt><dd>An entity that receives requests, decides whether and how many entities are needed, routes production, and keeps the portfolio coherent.</dd></div>
+      <div><dt>Forge</dt><dd>A production entity: creates artifacts to a repeatable spec. Must declare an output shape and ship ≥1 canonical example.</dd></div>
+      <div><dt>Nerd</dt><dd>An expert persona for exactly one technology, grounded in a priority chain. Answers; does not produce artifacts.</dd></div>
+      <div><dt>Scout</dt><dd>A detection entity that flags opportunities. Does not build; its independence is the point.</dd></div>
+      <div><dt>Genie</dt><dd>A family that goes meta into software change artifacts — fixes, changelogs, PRs, issues, postmortems, design docs, tests, git history — to extract transferable lessons.</dd></div>
+      <div><dt>Behavior delta</dt><dd>The difference in agent behavior with the entity loaded versus without. The only valid justification for existence.</dd></div>
+      <div><dt>Routing contract</dt><dd>The description field. Determines invocation, and therefore whether the entity ever comes alive.</dd></div>
+      <div><dt>Gate</dt><dd>A binary pass/fail check: routable, different, bounded, registered. One failure blocks the entity.</dd></div>
+      <div><dt>Terminal climb</dt><dd>The maximum meta level a family may reach. Above it, recursion adds cost without judgment.</dd></div>
+      <div><dt>Intake card</dt><dd>The steward's decision record: restated request, expected delta, verdict, decomposition, org placement, producer, gates, next action.</dd></div>
+      <div><dt>Decomposition</dt><dd>Splitting one request into the minimum set of entities, one routing boundary each.</dd></div>
+      <div><dt>Probe</dt><dd>A declared, re-runnable, read-only command that returns the current upstream version. The test for drift.</dd></div>
+      <div><dt>Statue</dt><dd>An entity with no evidence of ever being invoked. Addressed by fixing the trigger, not the body.</dd></div>
+    </dl>
+  </section>
+
+  <footer>
+    <p>
+      Source of truth: <code>agent-vault/skills/general/pygmalion-steward/</code>.
+      Taxonomy: <code>references/taxonomy.md</code>. Definitions:
+      <code>references/glossary.md</code>. Organization:
+      <code>references/org-chart.md</code>. Audit:
+      <code>scripts/vault-audit.py</code>.
+    </p>
+    <p>This page is a rendering, not the authority. When it disagrees with the vault, the vault wins.</p>
+  </footer>
+
+</div>
+</body>
+</html>
