@@ -60,6 +60,18 @@ vault does not have. A local checkout of the full upstream project (a 2 MB repo
 installed beside a 20 KB skill) is a *fork*, not a stale copy — replacing it would
 destroy work. It is reported as `diverged` and needs `--force`.
 
+**Intentional exceptions.** A machine-local allowlist keeps the guard green for
+deliberate forks:
+
+```
+~/.config/agent-vault/talos-allowlist.txt
+genie-...            # one name per line, # comments allowed
+```
+
+Override with `--allowlist FILE` or `$TALOS_ALLOWLIST`. Allowlisted copies report
+as `allowed` and do not fail the check. Keep the list short — every line is a copy
+that will silently diverge.
+
 **Semantics that matter across machines.** A missing skill is not drift. Each
 machine installs a subset; only an *existing but wrong* copy is an error. This is
 why Talos exits 1 on drift and 0 on missing.

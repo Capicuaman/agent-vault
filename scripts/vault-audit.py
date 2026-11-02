@@ -516,13 +516,36 @@ def install_roots(explicit: list[str] | None) -> list[Path]:
     ]
 
 
+def allowlist_path(explicit: str | None) -> Path:
+    if explicit:
+        return Path(explicit).expanduser()
+    env = os.environ.get("TALOS_ALLOWLIST")
+    if env:
+        return Path(env).expanduser()
+    return Path.home() / ".config" / "agent-vault" / "talos-allowlist.txt"
+
+
+def load_allowlist(path: Path) -> set[str]:
+    """Machine-local exceptions: one skill name per line, # comments allowed."""
+    if not path.is_file():
+        return set()
+    names = set()
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        name = line.split("#", 1)[0].strip()
+        if name:
+            names.add(name)
+    return names
+
+
 def check_installed(
     skills: dict[str, dict],
     roots: list[Path],
     repair: bool = False,
     repair_missing: bool = False,
     force: bool = False,
+    allowed: set[str] | None = None,
 ) -> list[dict]:
+    allowed = allowed or set()
     """Talos: compare each vault skill against every install root."""
     rows = []
     for name, skill in sorted(skills.items()):
@@ -574,7 +597,10 @@ def check_installed(
                 continue
 
             extra = installed_files - vault_files
-            if extra and not force:
+            if name in allowed:
+                row["status"] = "allowed"
+                row["detail"] = "allowlisted divergence"
+            elif extra and not force:
                 # The installed copy holds files the vault does not. It is a
                 # fork or a fuller upstream checkout, not a stale copy —
                 # replacing it would destroy work.
@@ -619,7 +645,7 @@ def unmanaged(roots: list[Path], skills: dict[str, dict]) -> dict[str, list[str]
 
 
 def installed_report(rows: list[dict], roots: list[Path], extra: dict[str, list[str]], short: bool) -> int:
-    order = ["drift", "diverged", "error", "invalid-name", "repaired", "ok", "linked", "missing"]
+    order = ["drift", "diverged", "error", "invalid-name", "repaired", "allowed", "ok", "linked", "missing"]
     if short:
         for row in rows:
             if row["status"] != "missing":
@@ -637,12 +663,19 @@ def installed_report(rows: list[dict], roots: list[Path], extra: dict[str, list[
             if status == "missing":
                 print(f"missing {len(group):3d}  — not installed on this machine (a choice, not an error)")
                 continue
+            if status == "allowed":
+                print(f"allowed {len(group):3d}  — intentional divergence (try to keep this list short)")
+                continue
             if status in ("ok", "linked"):
                 print(f"{status:12s} {len(group):3d}")
                 continue
             print(f"{status.upper():12s} {len(group):3d}")
             for row in group:
                 print(f"   · {row['name']}: {row['root']} {row['detail']}")
+        hint = allowlist_path(None)
+        if any(r["status"] == "diverged" for r in rows):
+            print(f"\nintentional exception? add the name to {hint}")
+
         unmanaged_total = sum(len(v) for v in extra.values())
         if unmanaged_total:
             print(f"\nunmanaged {unmanaged_total:3d}  — installed but not in the vault (informational)")
@@ -734,6 +767,8 @@ def main() -> int:
                         help="with --installed: also install skills that are absent")
     parser.add_argument("--force", action="store_true",
                         help="with --installed --repair: also replace copies holding extra files")
+    parser.add_argument("--allowlist", metavar="FILE",
+                        help="exceptions file (default ~/.config/agent-vault/talos-allowlist.txt, or $TALOS_ALLOWLIST)")
     parser.add_argument("--install-roots", nargs="+", metavar="DIR",
                         help="install roots (default ~/.agents/skills ~/.pi/agent/skills, or $PI_SKILLS_DIRS)")
     parser.add_argument("--root", help="vault root (default: script's parent)")
@@ -752,7 +787,8 @@ def main() -> int:
 
     if args.installed:
         roots = install_roots(args.install_roots)
-        rows = check_installed(skills, roots, args.repair, args.repair_missing, args.force)
+        allowed = load_allowlist(allowlist_path(args.allowlist))
+        rows = check_installed(skills, roots, args.repair, args.repair_missing, args.force, allowed)
         extra = unmanaged(roots, skills)
         if args.json:
             print(json.dumps({"roots": [str(r) for r in roots], "results": rows,
