@@ -70,9 +70,11 @@ A file that exists is not a file that loads. If the project has a loader, use it
 node -e "import('./dist/core/skills.js').then(m=>{const r=m.loadSkillsFromDir({dir:'<dir>',source:'user'});console.log(r.skills.length,r.diagnostics.length)})"
 ```
 
-Count skills and diagnostics separately. For this vault, the expected pair is
-`49 / 0` (vault) and `16 / 0` (local) at the time of writing — treat those as
-evidence to re-measure, not constants to quote.
+Count skills and diagnostics separately, and record the pair you measured.
+
+**Never quote a remembered pair.** This document itself once said `49 / 0` and
+`16 / 0`, and both were stale within a single commit. A number inside a skill
+about staleness is still a number that can go stale — measure it.
 
 ## 6. Counts
 
