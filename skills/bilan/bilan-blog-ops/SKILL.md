@@ -5,6 +5,13 @@ description: Blog content operations, creation workflows, and publishing standar
 
 # bilan — Blog Operations Skill
 
+**Last verified:** 2026-11-02 — frontmatter fields and content paths were checked
+against the live site repo (`~/Documents/bilan-mx/bilan-mx-astro`):
+`src/content/config.ts` (schema), `src/content/posts/`,
+`src/content/posts/en/`, and `src/utils/blogSeo.ts`. The Astro content schema is
+the authority on required fields; if this table and the schema disagree, fix
+the table.
+
 ## When to Use
 
 Load this skill alongside `bilan-base` and `bilan-webdev` when the task involves:
@@ -203,7 +210,8 @@ Use these existing tags whenever possible. Adding new tags requires updating `bl
 ### Image Workflow
 
 1. Optimize the source image
-2. Save to `public/blog-images/nombre-descriptivo.jpg`
+2. Save to `public/blog-images/nombre-descriptivo.jpg` (generated
+   illustrations live in `public/blog-images/generated/`, usually `.svg`)
 3. Reference in frontmatter: `image: "/blog-images/nombre-descriptivo.jpg"`
 4. Reference inline: `![Alt text](/blog-images/nombre-descriptivo.jpg)`
 5. Always provide `imageAlt` in frontmatter and alt text in Markdown

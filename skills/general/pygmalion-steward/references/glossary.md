@@ -176,7 +176,7 @@ coherence.
 | **Ghost** | A reference to an Entity that does not exist |
 | **Orphan** | An Entity that no registry or catalog lists |
 | **Hollow** | An Entity with no procedure, references, or examples |
-| **Stale** | An Entity whose dated grounding is past the threshold |
+| **Stale** | An Entity whose dated grounding is past the threshold. Grounding is an explicit `Last verified:` / `Grounding date:` / `Snapshot date:` if declared; otherwise the oldest date in prose. Dates inside fenced examples and audit-history tables are records of past events, not grounding. |
 | **Duplicate** | Two Entities with ≥85% description similarity |
 | **Statue** | An Entity with no evidence of ever being invoked |
 | **Drift** | Divergence between an Entity's grounding and current upstream reality |

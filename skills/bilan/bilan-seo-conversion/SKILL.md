@@ -5,6 +5,13 @@ description: Periodic SEO + conversion rate audit for bilan.mx. Use when the use
 
 # bilan — SEO + Conversion Audit Skill
 
+**Last verified:** 2026-11-02 — every data-source path below exists on the
+current textDump checkout, and the site facts quoted in the checklist were
+checked against `~/Documents/bilan-mx/bilan-mx-astro` (Astro sitemap
+integration, `public/robots.txt` pointing at `/sitemap-index.xml`, canonical and
+Open Graph handling in `src/layouts/BaseLayout.astro`). The audit-history file
+from 2026-02-04 now lives in `04_ARCHIVES/BILAN_stale_2026-10-13/WEB_DEVELOPMENT/`.
+
 ## When to Use
 
 Load this skill when the task involves:
@@ -309,6 +316,9 @@ grado farmacéutico, sin azúcar, sin saborizantes, sin ingredientes de relleno.
 
 | Date | File | Main Focus | Grade |
 |---|---|---|---|
-| 2026-02-04 | `bilan-mx-analysis-2026-02-04.md` | Initial technical baseline | B− |
+| 2026-02-04 | `bilan-mx-analysis-2026-02-04.md` (archived: `04_ARCHIVES/BILAN_stale_2026-10-13/WEB_DEVELOPMENT/`) | Initial technical baseline | B− |
 | 2026-06-11 | `2026-06-11_blog-seo-audit-top-5.md` | Blog internal linking + tags | C+ |
 | 2026-08-16 | `2026-08-16_seo-conversion-audit.md` | Full funnel + site restructure | D+ (conversion) |
+
+These rows are a record of past audits, not current claims. The most recent row
+sets the baseline for the next audit; do not re-grade the old ones.

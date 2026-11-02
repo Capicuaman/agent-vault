@@ -91,6 +91,14 @@ SNAPSHOT_PATTERNS = [
     re.compile(r"snapshot date:\s*(\d{4}-\d{2}-\d{2})", re.I),
 ]
 PROBE_RE = re.compile(r"\*\*Probe:\*\*\s*(.+)", re.I)
+HISTORY_HEADING = re.compile(
+    r"(audit|change|release)?\s*(history|changelog|log)\b"
+    r"|previous audits|past audits|what changed", re.I)
+GROUNDING_PATTERNS = [
+    re.compile(r"\*\*Last verified:\*\*\s*`?(\d{4}-\d{2}-\d{2})", re.I),
+    re.compile(r"\*\*Grounding date:\*\*\s*`?(\d{4}-\d{2}-\d{2})", re.I),
+    *SNAPSHOT_PATTERNS,
+]
 
 
 # ── discovery ────────────────────────────────────────────────────────────────
@@ -319,7 +327,43 @@ def check_duplicates(skills: dict[str, dict]) -> list[dict]:
     return out
 
 
+def _strip_non_grounding(text: str) -> str:
+    """Drop fenced code and historical-record sections before scanning dates.
+
+    A date inside an example frontmatter block or an audit-history table is a
+    record of something that happened, not a claim about today. Only prose that
+    could be grounding survives.
+    """
+    out: list[str] = []
+    in_fence = False
+    skip_level: int | None = None
+    for line in text.splitlines():
+        if FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        heading = HEADING_RE.match(line)
+        if heading:
+            level = len(heading.group(1))
+            if skip_level is not None and level <= skip_level:
+                skip_level = None
+            if skip_level is None and HISTORY_HEADING.search(heading.group(2)):
+                skip_level = level
+        if skip_level is not None:
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
 def check_stale(skills: dict[str, dict], max_age: int) -> list[dict]:
+    """Stale = dated *grounding* older than max_age.
+
+    An explicit declaration wins: `**Last verified:**`, `**Grounding date:**`,
+    or `Snapshot date:` is the entity stating when its claims were checked.
+    Without one, fall back to the oldest date in survivable prose (examples and
+    history tables have already been stripped).
+    """
     out, today = [], date.today()
     for s in skills.values():
         candidates = [s["path"]]
@@ -327,9 +371,17 @@ def check_stale(skills: dict[str, dict], max_age: int) -> list[dict]:
             d = s["dir"] / sub
             if d.is_dir():
                 candidates += sorted(d.glob("*.md"))
-        oldest = None
+        declared: list[date] = []
+        oldest: date | None = None
         for path in candidates:
-            for stamp in DATE_RE.findall(path.read_text(encoding="utf-8", errors="replace")):
+            raw = path.read_text(encoding="utf-8", errors="replace")
+            for pattern in GROUNDING_PATTERNS:
+                for stamp in pattern.findall(raw):
+                    try:
+                        declared.append(datetime.strptime(stamp, "%Y-%m-%d").date())
+                    except ValueError:
+                        pass
+            for stamp in DATE_RE.findall(_strip_non_grounding(raw)):
                 try:
                     d = datetime.strptime(stamp, "%Y-%m-%d").date()
                 except ValueError:
@@ -338,9 +390,11 @@ def check_stale(skills: dict[str, dict], max_age: int) -> list[dict]:
                     continue
                 if oldest is None or d < oldest:
                     oldest = d
-        if oldest and (today - oldest).days > max_age:
+        grounding = max(declared) if declared else oldest
+        if grounding and (today - grounding).days > max_age:
+            kind = "grounding" if declared else "oldest dated grounding"
             out.append({"kind": "stale", "name": s["name"],
-                        "detail": f"oldest dated grounding {oldest} ({(today - oldest).days}d > {max_age}d)"})
+                        "detail": f"{kind} {grounding} ({(today - grounding).days}d > {max_age}d)"})
     return out
 
 

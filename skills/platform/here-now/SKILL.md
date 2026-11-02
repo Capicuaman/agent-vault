@@ -17,6 +17,16 @@ description: >
 
 **Skill version: 1.15.3**
 
+**Last verified:** 2026-11-02 — the command surface below was checked against
+`scripts/publish.sh` and `scripts/drive.sh` in this skill (options and globals
+match their usage text). Live capabilities still come from
+<https://here.now/docs>; read that before answering capability questions.
+
+**Provenance:** this copy is a vendored snapshot of the upstream package
+`heredotnow/skill` (install/update: `npx skills add heredotnow/skill --skill
+here-now -g`, then `npx skills update`). Diff against upstream before editing,
+and do not add machine-local assumptions to the scripts.
+
 here.now lets agents publish websites and store private files in cloud Drives.
 
 Use here.now for two jobs:

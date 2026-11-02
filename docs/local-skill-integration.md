@@ -180,7 +180,21 @@ Machine prerequisites (a local database, a CLI on PATH) belong in a
 
 ## Open follow-ups
 
-- `bilan-label-system` is **hollow**; `bilan-blog-ops`, `bilan-seo-conversion`,
-  and `here-now` are **stale** past 180 days (see `vault-audit.py --short`).
 - `book-to-skill` stays machine-allowlisted until the full checkout is either
   upstreamed or trimmed; the allowlist file says exactly that.
+- `here-now` is vendored rather than external even though it declares an
+  upstream package (`heredotnow/skill`, v1.15.3). If strict ownership is wanted,
+  move it to `registries/_externals.md` and install it with `npx skills`.
+- The staleness check treats fenced examples and audit-history tables as
+  records, not grounding. An entity whose facts move without anyone bumping an
+  explicit `Last verified:` will not be caught by dates alone.
+
+## Fixed in this pass (2026-11-02)
+
+- `bilan-label-system` was hollow — a stub pointing at project files. It now
+  carries the current YAML source-of-truth hierarchy, front/back checklists,
+  typography policy, container-adaptation workflow, and a change-brief template.
+- `bilan-blog-ops`, `bilan-seo-conversion`, and `here-now` were flagged stale by
+  dates that were examples or audit records. The check is now precise about
+  grounding, and each skill declares `Last verified:` with what was checked
+  (site schema, data sources, script command surface).
