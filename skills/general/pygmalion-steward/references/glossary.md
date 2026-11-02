@@ -165,6 +165,13 @@ coherence.
 | **Statue** | An Entity with no evidence of ever being invoked |
 | **Drift** | Divergence between an Entity's grounding and current upstream reality |
 
+### Talos
+The installed-copy guard: a check that compares vault skills against every install
+root by content hash. Named for the bronze automaton that patrolled Crete. Talos
+reports `drift` (repairable), `diverged` (holds extra files; needs a human),
+`missing` (a choice, not an error), and `unmanaged` (installed, not from the
+vault). It never guesses and never repairs a superset.
+
 ### Drift
 Specifically: an Entity is internally consistent and loadable, but the world moved.
 A nerd whose snapshot says `0.9.3` while upstream is `1.4.0` is **drifted**, not

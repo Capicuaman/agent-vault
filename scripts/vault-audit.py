@@ -20,7 +20,18 @@ Usage:
   vault-audit.py --json          # machine-readable
   vault-audit.py --max-age 180   # staleness threshold in days
 
-Exit codes: 0 = clean or warnings only, 1 = errors (zombies/duplicates/ghosts).
+  vault-audit.py --installed     # Talos: compare installed copies to the vault
+  vault-audit.py --installed --repair          # replace drifted copies
+  vault-audit.py --installed --repair-missing  # also install missing ones
+
+Talos semantics: a *drifted* copy is an error (it exists and is wrong); a
+*missing* copy is a choice (this machine did not install that skill), and an
+*unmanaged* folder is informational (installed, but not from the vault).
+Install roots default to ~/.agents/skills and ~/.pi/agent/skills, or override
+with --install-roots or $PI_SKILLS_DIRS (path-separator list).
+
+Exit codes: 0 = clean or warnings only, 1 = errors (zombies/duplicates/ghosts/
+install drift).
 
 Read-only by contract: this script must never write to the vault.
 """
@@ -29,10 +40,12 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from collections import defaultdict
@@ -468,6 +481,179 @@ def drift_report(rows: list[dict], short: bool) -> int:
     return 1 if any(r["status"] == "drift" for r in rows) else 0
 
 
+def _snapshot(path: Path) -> tuple[set[str], str]:
+    """Return (relative file set, content hash) for a skill tree."""
+    base = path.resolve() if path.is_symlink() else path
+    if not base.is_dir():
+        return set(), ""
+    files: set[str] = set()
+    digest = hashlib.sha256()
+    for file in sorted(base.rglob("*")):
+        if not file.is_file():
+            continue
+        if any(part in ("__pycache__", ".git", ".herenow") for part in file.parts):
+            continue
+        if file.suffix == ".pyc":
+            continue
+        rel = file.relative_to(base).as_posix()
+        files.add(rel)
+        digest.update(rel.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(file.read_bytes())
+        digest.update(b"\0")
+    return files, digest.hexdigest()
+
+
+def install_roots(explicit: list[str] | None) -> list[Path]:
+    if explicit:
+        return [Path(p).expanduser() for p in explicit]
+    env = os.environ.get("PI_SKILLS_DIRS") or os.environ.get("PI_SKILLS_DIR")
+    if env:
+        return [Path(p).expanduser() for p in env.split(os.pathsep) if p.strip()]
+    return [
+        Path.home() / ".agents" / "skills",
+        Path.home() / ".pi" / "agent" / "skills",
+    ]
+
+
+def check_installed(
+    skills: dict[str, dict],
+    roots: list[Path],
+    repair: bool = False,
+    repair_missing: bool = False,
+    force: bool = False,
+) -> list[dict]:
+    """Talos: compare each vault skill against every install root."""
+    rows = []
+    for name, skill in sorted(skills.items()):
+        vault_files, vault_digest = _snapshot(skill["dir"])
+        for root in roots:
+            if not root.is_dir():
+                continue
+            # A skill name can never contain a separator; this guard keeps
+            # --repair from touching anything outside the root.
+            if os.sep in name or name in ("", ".", ".."):
+                rows.append({"name": name, "root": str(root), "status": "invalid-name", "detail": ""})
+                continue
+            # The installer copies flat (<root>/<name>), but a category folder
+            # may also be installed as-is (<root>/<category>/<name>).
+            candidates = [root / name, root / skill["category"] / name]
+            target = next((c for c in candidates if c.is_symlink() or c.is_dir()), None)
+            row = {"name": name, "root": str(root), "status": "", "detail": ""}
+
+            if target is None:
+                row["status"] = "missing"
+                if repair_missing:
+                    try:
+                        shutil.copytree(skill["dir"], root / name)
+                        row["status"], row["detail"] = "repaired", "installed"
+                    except OSError as exc:
+                        row["status"], row["detail"] = "error", str(exc)
+                rows.append(row)
+                continue
+
+            if target.is_symlink():
+                if _snapshot(target)[1] == vault_digest:
+                    row["status"], row["detail"] = "linked", "symlink matches vault"
+                else:
+                    row["status"] = "drift"
+                    row["detail"] = "symlink points at different content (fix manually)"
+                rows.append(row)
+                continue
+
+            if not target.is_dir():
+                row["status"] = "invalid-name"
+                row["detail"] = f"not a directory: {target}"
+                rows.append(row)
+                continue
+
+            installed_files, installed_digest = _snapshot(target)
+            if installed_digest == vault_digest:
+                row["status"] = "ok"
+                rows.append(row)
+                continue
+
+            extra = installed_files - vault_files
+            if extra and not force:
+                # The installed copy holds files the vault does not. It is a
+                # fork or a fuller upstream checkout, not a stale copy —
+                # replacing it would destroy work.
+                row["status"] = "diverged"
+                row["detail"] = f"{len(extra)} file(s) not in vault; not repaired (use --force)"
+            elif repair:
+                try:
+                    shutil.rmtree(target)
+                    shutil.copytree(skill["dir"], target)
+                    row["status"], row["detail"] = "repaired", "replaced"
+                except OSError as exc:
+                    row["status"], row["detail"] = "error", str(exc)
+            else:
+                row["status"] = "drift"
+            rows.append(row)
+    return rows
+
+
+def unmanaged(roots: list[Path], skills: dict[str, dict]) -> dict[str, list[str]]:
+    """Folders installed in a root that the vault does not manage.
+
+    Category folders and containers holding known skills are not unmanaged —
+    they are just a nested layout.
+    """
+    found: dict[str, list[str]] = {}
+    known = set(skills)
+    categories = {skill["category"] for skill in skills.values()}
+    for root in roots:
+        if not root.is_dir():
+            continue
+        names = []
+        for entry in sorted(root.iterdir()):
+            if entry.name.startswith(".") or entry.name in known or entry.name in categories:
+                continue
+            if not (entry.is_dir() or entry.is_symlink()):
+                continue
+            if entry.is_dir() and any((entry / n).exists() for n in known):
+                continue  # a container of managed skills
+            names.append(entry.name)
+        found[str(root)] = names
+    return found
+
+
+def installed_report(rows: list[dict], roots: list[Path], extra: dict[str, list[str]], short: bool) -> int:
+    order = ["drift", "diverged", "error", "invalid-name", "repaired", "ok", "linked", "missing"]
+    if short:
+        for row in rows:
+            if row["status"] != "missing":
+                print(f"{row['status']:12s} {row['name']:28s} {row['root']} {row['detail']}")
+    else:
+        print("talos — installed copy check\n")
+        for root in roots:
+            state = "missing" if not root.is_dir() else f"{sum(1 for r in rows if r['root'] == str(root))} managed"
+            print(f"  root: {root}  ({state})")
+        print()
+        for status in order:
+            group = [r for r in rows if r["status"] == status]
+            if not group:
+                continue
+            if status == "missing":
+                print(f"missing {len(group):3d}  — not installed on this machine (a choice, not an error)")
+                continue
+            if status in ("ok", "linked"):
+                print(f"{status:12s} {len(group):3d}")
+                continue
+            print(f"{status.upper():12s} {len(group):3d}")
+            for row in group:
+                print(f"   · {row['name']}: {row['root']} {row['detail']}")
+        unmanaged_total = sum(len(v) for v in extra.values())
+        if unmanaged_total:
+            print(f"\nunmanaged {unmanaged_total:3d}  — installed but not in the vault (informational)")
+            for root, names in extra.items():
+                if names:
+                    print(f"   · {root}: {', '.join(names)}")
+
+    problems = sum(1 for r in rows if r["status"] in ("drift", "diverged", "error", "invalid-name"))
+    return 1 if problems else 0
+
+
 def check_counts(skills: dict[str, dict]) -> list[dict]:
     out = []
     actual = len(skills)
@@ -540,6 +726,16 @@ def main() -> int:
                         help="compare declared versions against probes instead of a full audit")
     parser.add_argument("--run-probes", action="store_true",
                         help="with --drift: execute declared probes (read-only commands)")
+    parser.add_argument("--installed", action="store_true",
+                        help="Talos: compare installed copies against the vault")
+    parser.add_argument("--repair", action="store_true",
+                        help="with --installed: replace drifted copies")
+    parser.add_argument("--repair-missing", action="store_true",
+                        help="with --installed: also install skills that are absent")
+    parser.add_argument("--force", action="store_true",
+                        help="with --installed --repair: also replace copies holding extra files")
+    parser.add_argument("--install-roots", nargs="+", metavar="DIR",
+                        help="install roots (default ~/.agents/skills ~/.pi/agent/skills, or $PI_SKILLS_DIRS)")
     parser.add_argument("--root", help="vault root (default: script's parent)")
     args = parser.parse_args()
 
@@ -553,6 +749,16 @@ def main() -> int:
     if not skills:
         print(f"vault-audit: no skills found under {SKILLS}", file=sys.stderr)
         return 2
+
+    if args.installed:
+        roots = install_roots(args.install_roots)
+        rows = check_installed(skills, roots, args.repair, args.repair_missing, args.force)
+        extra = unmanaged(roots, skills)
+        if args.json:
+            print(json.dumps({"roots": [str(r) for r in roots], "results": rows,
+                              "unmanaged": extra}, indent=2))
+            return 1 if any(r["status"] in ("drift", "diverged", "error", "invalid-name") for r in rows) else 0
+        return installed_report(rows, roots, extra, args.short)
 
     if args.drift:
         rows = check_drift(skills, args.run_probes, args.max_age)

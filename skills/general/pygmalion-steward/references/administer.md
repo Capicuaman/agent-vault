@@ -27,6 +27,57 @@ Rules:
   SSHFS mount; elsewhere: `~/Documents/agent-vault`). Scripts that hardcode the
   path break silently on the other machine — check before trusting them.
 
+## Talos — installed-copy drift
+
+The vault is the source of truth; installed skills are a **cache**. **Talos** is
+the guard that walks the perimeter: it compares every vault skill against every
+install root by content hash.
+
+Named for the bronze automaton that patrolled Crete — he did not build, decide, or
+judge. He noticed when something inside the walls was wrong.
+
+```bash
+python3 scripts/vault-audit.py --installed
+python3 scripts/vault-audit.py --installed --repair            # fix drifted copies
+python3 scripts/vault-audit.py --installed --repair-missing    # also install absent ones
+```
+
+Roots default to `~/.agents/skills` and `~/.pi/agent/skills`. Override with
+`--install-roots DIR...` or `$PI_SKILLS_DIRS` (a path-separator list). Nested
+layouts (`<root>/<category>/<name>`) are found as well as flat ones.
+
+| Status | Meaning | Action |
+|---|---|---|
+| `ok` | identical to the vault | none |
+| `linked` | symlink whose target matches | none |
+| `drift` | exists and differs | `--repair` |
+| `diverged` | holds files the vault does not | human decision; `--force` replaces |
+| `missing` | not installed on this machine | a choice, not an error |
+| `unmanaged` | installed, not from the vault | informational |
+
+**The superset guard.** Talos refuses to repair a copy that contains files the
+vault does not have. A local checkout of the full upstream project (a 2 MB repo
+installed beside a 20 KB skill) is a *fork*, not a stale copy — replacing it would
+destroy work. It is reported as `diverged` and needs `--force`.
+
+**Semantics that matter across machines.** A missing skill is not drift. Each
+machine installs a subset; only an *existing but wrong* copy is an error. This is
+why Talos exits 1 on drift and 0 on missing.
+
+### Keeping machines in step
+
+```
+this machine          git                other machine
+──────────────────────────────────────────────────────────
+edit vault   ──push──▶  GitHub  ──pull──▶  vault clone
+                                              │
+                                     talos --installed
+                                              │
+                                    --repair if drifted
+```
+
+Talos owns the last mile. Git owns distribution.
+
 ## Registries of record
 
 Registry coverage in this vault is **partial by design**:
@@ -160,7 +211,8 @@ update in the **same commit**:
 | When | What |
 |---|---|
 | **Every change** | Run the audit; fix any new zombie/ghost/duplicate/orphan |
-| **Weekly (10 min)** | `--short` audit; clear new findings |
+| **After a `git pull`** | `--installed`, then `--repair` if it reports drift |
+| **Weekly (10 min)** | `--short` audit + `--installed`; clear new findings |
 | **Monthly (45 min)** | Full audit; review statues; split/merge decisions; count hygiene |
 | **On upstream change** | Re-ground affected entities; see [`update.md`](update.md) |
 
