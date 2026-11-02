@@ -84,6 +84,23 @@ scout ────→ (nothing — a Scout is already the top)
 - `steward-steward` — governance of governance is just governance
 - `scout-forge` — detection and production are different roles
 
+### The producer rule
+
+> **A producer may produce corpus entities that sit below it. It may never produce
+> producers or governance.**
+
+| Produces | Example | Legal? |
+|---|---|---|
+| a corpus entity, below it | `nerd-forge` → `*-nerd` (L2 → L5) | ✅ |
+| a producer, same layer | `forge-forge` (L2 → L2) | ❌ self-referential |
+| governance, above it | `steward-forge` (L2 → L1) | ❌ production must not manufacture deciders |
+| encoded judgment | `doctrine-forge` (L2 → L4) | ❌ a forge that encodes judgment is a doctrine in a producer's coat |
+
+Layer-legality is necessary but not sufficient: a layer-legal producer still has to
+pass ripeness (≥2 instances or ≥2 named candidates, an explicit procedure, and
+observable quality variance). `scout-forge` is layer-legal but premature at N=1.
+`genie-forge` passes every signal (six genies, rigid anatomy, explicit procedure).
+
 If you feel the need to climb again, the level below is under-specified. Fix the
 spec.
 

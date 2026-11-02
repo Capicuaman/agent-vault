@@ -38,6 +38,17 @@ The hard part of software is not writing code that does the thing. It is writing
 code that keeps doing the thing in an environment you do not control, across
 states you did not enumerate, for people whose needs change.
 
+## Candidate entities (not yet built)
+
+| Candidate | Layer | Ripeness | Why |
+|---|---|---|---|
+| `genie-forge` | L2 producer → L5 corpus | ✅ **ripe** | Six genies, rigid anatomy (`SKILL.md` + `references/`), explicit procedure, observable quality variance. Layer-legal. |
+| `genie-nerd` | L6 auditor | ⏸ defer | Auditing one family's corpus is a `*-forge-nerd`-shaped job; the genie corpus is homogeneous enough that `genie-forge` covers it. |
+
+Threshold (per `registries/_forge-pattern.md`): ≥2 instances, explicit procedure,
+quality variance, and no existing forge covering the shape. `genie-forge` meets
+all four; it is registered here so it is a known future entity, not a surprise.
+
 ## Install
 
 ```bash
