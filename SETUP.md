@@ -44,18 +44,45 @@ cd ~/Documents/agent-vault && ./scripts/vault-sync.sh
 ./scripts/vault-sync.sh --install
 ```
 
-## 5. Push Your Changes Back
+## 5. Adopt a Skill That Already Exists on This Machine
+
+Do not copy by hand. The importer runs the gates (real directory, not a
+symlink, loadable frontmatter, no secrets, not declared external), copies the
+skill, and refreshes the live copy from the vault:
+
+```bash
+cd ~/Documents/agent-vault
+
+./scripts/vault-import.sh my-skill --category platform --dry-run
+./scripts/vault-import.sh my-skill --category platform
+$EDITOR README.md                              # add the row/prose
+./scripts/vault-manifest.sh --write            # regenerate catalogs
+python3 scripts/vault-audit.py --installed     # no longer "unmanaged"
+./scripts/vault-push.sh "import my-skill into platform"
+```
+
+If the skill is owned upstream (Orca, Omarchy, skills.sh), do **not** import it.
+Add a row to `registries/_externals.md` instead. Full rationale:
+[`docs/local-skill-integration.md`](docs/local-skill-integration.md).
+
+## 6. Push Your Changes Back
 
 When you edit a skill, update a prompt, or create something new:
 
 ```bash
 cd ~/Documents/agent-vault
 
-# Copy the updated/new skill into vault first
-cp -r ~/.pi/agent/skills/my-new-skill skills/platform/
-
-# Then push
+# Authored here: create skills/<category>/<name>/SKILL.md, then
+./scripts/vault-manifest.sh --write
+python3 scripts/vault-audit.py --short
 ./scripts/vault-push.sh "add my-new-skill to platform"
+```
+
+Before pushing, both guards should pass:
+
+```bash
+./scripts/vault-manifest.sh --check
+python3 scripts/vault-audit.py --short
 ```
 
 ---
@@ -63,10 +90,16 @@ cp -r ~/.pi/agent/skills/my-new-skill skills/platform/
 ## Directory Reference
 
 ```
-~/.pi/agent/skills/      ← where vault-install.sh drops skills
-~/.pi/agent/prompts/     ← where prompts get installed
-~/Documents/agent-vault/ ← the vault repo (this)
+~/.pi/agent/skills/       ← vault-install.sh default install root
+~/.agents/skills/         ← alternate install root (pi reads both)
+~/.pi/agent/prompts/      ← where prompts get installed
+~/Documents/agent-vault/  ← the vault repo (this)
 ```
+
+`vault-sync.sh --install` and `vault-audit.py --installed` default to
+`~/.agents/skills` + `~/.pi/agent/skills`. If this machine uses only one root,
+set `PI_SKILLS_DIR=~/.agents/skills` (install/sync) or pass
+`--install-roots ~/.agents/skills` (audit).
 
 ## Environment Variable Overrides
 
@@ -76,6 +109,17 @@ PI_SKILLS_DIR=/path/to/project/.pi/skills ./scripts/vault-install.sh general
 ```
 
 ---
+
+## External Skills
+
+A package-managed skill (Orca stubs, Omarchy's own skills, skills.sh packages) is
+never vendored. It is declared in `registries/_externals.md` with an owner and a
+verify command; Talos then reports it as `external` instead of `unmanaged`.
+
+```bash
+$EDITOR registries/_externals.md
+python3 scripts/vault-audit.py --installed
+```
 
 ## Herdr Session Bootstrap
 

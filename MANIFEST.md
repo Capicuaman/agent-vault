@@ -1,84 +1,92 @@
 # Vault Manifest
 
-Auto-maintained index of all vault content. Last updated manually — run `./scripts/vault-manifest.sh` to regenerate (TODO: build that script).
+Index of all vault content. The skills section between the markers is generated —
+run `./scripts/vault-manifest.sh --write` after adding or removing a skill, and
+`--check` before pushing. Everything outside the markers is hand-written.
 
-## Skills (50 total)
+<!-- BEGIN SKILLS -->
+## Skills (52 total)
 
 ### bilan/ (9 skills)
-| Skill | Trigger | Source |
-|-------|---------|--------|
-| `bilan-base` | Core company knowledge, brand voice | textDump/.pi/skills |
-| `bilan-marketing` | Campaigns, personas, content | textDump/.pi/skills |
-| `bilan-sales` | Pricing, CRM, objection handling | textDump/.pi/skills |
-| `bilan-label-system` | Packaging labels, Inkscape/SVG | textDump/.agents/skills |
-| `bilan-blog-ops` | Blog creation and publishing | ~/.pi/agent/skills |
-| `bilan-design` | Design system, Tailwind, tokens | ~/.pi/agent/skills |
-| `bilan-mx-nerd` | Live bilan.mx site deep-nerd | ~/.pi/agent/skills |
-| `bilan-seo-conversion` | SEO + CRO audits | ~/.pi/agent/skills |
-| `bilan-webdev` | Astro site architecture and dev | ~/.pi/agent/skills |
+| Skill | Trigger |
+|-------|---------|
+| `bilan-base` | Core company knowledge for bilan (health and wellness brand). |
+| `bilan-blog-ops` | Blog content operations, creation workflows, and publishing standards for bilan. |
+| `bilan-design` | Design system, CSS architecture, and visual consistency for bilan. |
+| `bilan-label-system` | Manage bilan packaging labels end-to-end: front/back panel structure, typography decisions,… |
+| `bilan-marketing` | Marketing-specific workflows, personas, campaign history, and content conventions for bilan. |
+| `bilan-mx-nerd` | Deep-nerd mode for bilan.mx (https://bilan.mx) — the deployed public marketing site for the… |
+| `bilan-sales` | Sales-specific workflows, pricing tiers, objection handling, CRM stages, and competitive battle… |
+| `bilan-seo-conversion` | Periodic SEO + conversion rate audit for bilan.mx. |
+| `bilan-webdev` | Core web development architecture and progressive enhancement guide for the bilan Astro site. |
 
 ### general/ (19 skills)
-| Skill | Trigger | Source |
-|-------|---------|--------|
-| `assumption-space-sync` | Propagate new facts across docs | textDump/.agents/skills |
-| `daily-journal` | Interactive daily journaling | textDump/.agents/skills |
-| `elicitation` | Indirect questioning, high-stakes conversations | textDump/.pi/skills |
-| `emil-design-eng` | UI polish philosophy (Emil Kowalski) | textDump/.agents/skills |
-| `git-care` | Safe commit/push workflows | textDump/.pi/skills |
-| `git-history-hygiene` | Clean git history, commit planning | textDump/.pi/skills |
-| `impeccable` | Frontend UI design and redesign | textDump/.pi/skills |
-| `learning-hq` | Learning HQ dashboard maintenance | textDump/.pi/skills |
-| `metaphors-gamification` | Conceptual metaphors for gamification | textDump/.agents/skills |
-| `one-page-executive-brief` | Compress docs into one-pagers | textDump/.agents/skills |
-| `prompt-skill-agent-triage` | Decide: prompt vs. skill vs. agent | textDump/.agents/skills |
-| `session-exec-report` | Executive reports on pi sessions | textDump/.pi/skills |
-| `tab-triage` | OneTab URL dump processing | textDump/.agents/skills |
-| `technology-teaching` | Best teaching artifact for any tech | textDump/.agents/skills |
-| `tech-onboarding-orchestrator` | One-swoop tech onboarding | textDump/.agents/skills |
-| `book-to-skill` | Convert books/docs into structured skills | textDump/.agents/skills |
-| `meta-prompt-coach` | Coach and improve prompts as artifacts | ~/.pi/agent/skills |
-| `pygmalion-steward` | Entity intake, decomposition, org chart, audit, drift | ~/.agents/skills |
-| `grill-me` | One-question-at-a-time interrogation (test or extract) | ~/.agents/skills |
+| Skill | Trigger |
+|-------|---------|
+| `assumption-space-sync` | Synchronize project files when new facts invalidate old assumptions. |
+| `book-to-skill` | Convert books, papers, long documents, or prior reading notes into compact reusable agent skills. |
+| `daily-journal` | Interactive daily journaling for the 05_JOURNAL folder. |
+| `elicitation` | Extract accurate information from people who have incentive to shape their answers, using… |
+| `emil-design-eng` | This skill encodes Emil Kowalski's philosophy on UI polish, component design, animation… |
+| `git-care` | Safely review, stage, commit, and push notes or project updates without losing work, staging… |
+| `git-history-hygiene` | Keep Git history readable by planning commit boundaries, spotting mixed changes early, using… |
+| `grill-me` | Interrogate the user one question at a time — to test whether they actually understand… |
+| `impeccable` | Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill,… |
+| `learning-hq` | Scan the textDump repo for all learning materials and maintain the central Learning HQ HTML… |
+| `meta-prompt-coach` | Coaches the user in meta-prompt engineering — recognizing when meta thinking applies,… |
+| `metaphors-gamification` | Apply Lakoff & Johnson's "Metaphors We Live By" conceptual metaphor theory to analyze workflows… |
+| `one-page-executive-brief` | Creates a decision-ready one-page executive brief from longer project docs, research memos,… |
+| `prompt-skill-agent-triage` | Decide whether a new workflow should stay a one-off prompt, graduate into a reusable pi skill,… |
+| `pygmalion-steward` | Steward of the agent entity corpus. |
+| `session-exec-report` | Write a decision-ready executive report on the current pi session (or a specified slice of it)… |
+| `tab-triage` | Triage a OneTab URL dump — clean tracking params, classify each link as Keep/Inbox/Discard,… |
+| `tech-onboarding-orchestrator` | One-swoop onboarding for a new technology, GitHub repo, library, tool, framework, paper, or… |
+| `technology-teaching` | Read technology files across the `textDump/` repo, extract the strongest explanation strategies… |
 
 ### genies/ (6 skills)
-| Skill | Trigger | Source |
-|-------|---------|--------|
-| `genie-doctrine` | Boundary taxonomy, easy vs hard, drill worksheet | ~/.agents/skills |
-| `genie-read` | Mine changelogs, PRs, issues, postmortems, git | ~/.agents/skills |
-| `genie-error` | Capture/triage/write up your own errors | ~/.agents/skills |
-| `genie-write` | Commit/PR/changelog/bugfix note/postmortem writing | ~/.agents/skills |
-| `genie-review` | Boundary lens on a pending diff or design | ~/.agents/skills |
-| `genie-drill` | Drills, casebooks, Anki conversion, review rituals | ~/.agents/skills |
+| Skill | Trigger |
+|-------|---------|
+| `genie-doctrine` | Shared doctrine for the genies family — the boundary taxonomy that explains why bugs are hard,… |
+| `genie-drill` | Turn software-engineering lessons into durable skill through deliberate practice — the five-step… |
+| `genie-error` | Capture, fingerprint, triage, and write up errors into the error-notes library at… |
+| `genie-read` | Mine software change artifacts — changelogs, release notes, pull requests, diffs, issue threads,… |
+| `genie-review` | Review a pending diff, pull request, or design for the bug classes that are hard to find —… |
+| `genie-write` | Write change artifacts that teach — commit messages, pull request bodies, changelog entries,… |
+
+### knowledge/ (1 skills)
+| Skill | Trigger |
+|-------|---------|
+| `bonanno-game-theory` | Knowledge base from "Game Theory: An open access textbook with 165 solved exercises" by Giacomo… |
 
 ### nerds/ (5 skills)
-| Skill | Trigger | Source |
-|-------|---------|--------|
-| `herdr-nerd` | Herdr terminal multiplexer expert | textDump/.pi/skills |
-| `homeassistant-nerd` | Home Assistant architecture | ~/.pi/agent/skills |
-| `laya-nerd` | Laya decision engine expert | textDump/.pi/skills |
-| `nerd-forge-nerd` | Meta-expert on the *-nerd pattern | ~/.pi/agent/skills |
-| `rea-nerd` | REA reverse-engineering expert | textDump/.pi/skills |
+| Skill | Trigger |
+|-------|---------|
+| `herdr-nerd` | Deep-nerd mode for Herdr (https://herdr.dev) — the terminal-native agent runtime (server +… |
+| `homeassistant-nerd` | Home Assistant architecture, YAML/config review, automation debugging, integration planning,… |
+| `laya-nerd` | Deep-nerd mode for laya (https://github.com/NandhaKishorM/laya) — a multilingual… |
+| `nerd-forge-nerd` | Deep-nerd mode for the nerd-forge pattern itself and the entire *-nerd / *-forge corpus on this… |
+| `rea-nerd` | Deep-nerd mode for REA / Reverse Engineer Anything (https://github.com/morluto/rea) — an… |
 
 ### forges/ (6 skills)
-| Skill | Trigger | Source |
-|-------|---------|--------|
-| `forge-scout` | Detect forge-ripe opportunities | ~/.pi/agent/skills |
-| `instruction-skill-forge` | Turn instructions into skills | textDump/.agents/skills |
-| `nerd-forge` | Create new *-nerd persona skills | ~/.pi/agent/skills |
-| `prompt-pattern-forge` | Extract reusable prompt patterns | ~/.pi/agent/skills |
-| `workflow-drill-forge` | Gamified workflow drills | textDump/.agents/skills |
-| `worktree-drill-forge` | Git/Herdr worktree drills | textDump/.pi/skills |
+| Skill | Trigger |
+|-------|---------|
+| `forge-scout` | Detector skill that watches your work for forge-ripe opportunities and flags them before you… |
+| `instruction-skill-forge` | Turn a raw user instruction, prompt, rule, example, or repeated behavior into the right meta… |
+| `nerd-forge` | Create a new *-nerd skill: a grounded, enthusiastic expert persona for a specific technology,… |
+| `prompt-pattern-forge` | Forge that extracts and documents a reusable prompt pattern from a prompt the user just made. |
+| `workflow-drill-forge` | Turn any workflow, tool, repo note, or process into gamified drills that teach understanding… |
+| `worktree-drill-forge` | Create practical, gamified drills for Git worktrees and Herdr worktree workflows. |
 
-### platform/ (5 skills)
-| Skill | Trigger | Source |
-|-------|---------|--------|
-| `graphify` | Knowledge graph building + querying | ~/.pi/agent/skills |
-| `herdr` | Control Herdr panes/tabs/workspaces | ~/.pi/agent/skills |
-| `here-now` | Publish sites, store files in cloud | ~/.agents/skills |
-| `pi-agent-helper` | pi configuration and customization | ~/.pi/agent/skills |
-| `prior-art` | Find existing solutions first | ~/.pi/agent/skills |
-
----
+### platform/ (6 skills)
+| Skill | Trigger |
+|-------|---------|
+| `anki-admin` | REQUIRED whenever the user asks about Anki on this machine: reviewing, studying, retention,… |
+| `graphify` | Use for any question about a codebase, its architecture, file relationships, or project content… |
+| `herdr` | Control Herdr, a terminal multiplexer for coding agents. |
+| `here-now` | here.now lets agents publish websites and store private files in cloud Drives. |
+| `pi-agent-helper` | Helps with recurring questions about pi, pi-agent, pi-coding-agent, and related customization… |
+| `prior-art` | Always find the existing popular solution before writing custom code or proposing complex setups. |
+<!-- END SKILLS -->
 
 ## Prompts (15 files)
 

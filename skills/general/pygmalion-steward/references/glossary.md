@@ -26,7 +26,8 @@ The Corpus has health (see *Health state*), not just content.
 A named class of Entity sharing an anatomy, a role, and a Registry of record.
 
 Current Families: `prompt`, `skill`, `nerd`, `forge`, `forge-nerd`, `scout`,
-`doctrine`, `steward`, `genie`, `drill-pack`, `system-prompt`.
+`doctrine`, `steward`, `genie`, `knowledge-pack`, `drill-pack`, `system-prompt`,
+`external`.
 
 ### Role
 A Family's function in the organization chart, independent of its content:
@@ -41,6 +42,7 @@ The single file that authoritatively lists a Family's members and its spec.
 |---|---|
 | nerd, scout | `registries/_tech-nerd-pattern.md` |
 | forge, forge-nerd | `registries/_forge-pattern.md` |
+| external | `registries/_externals.md` |
 | everything else | `README.md` + `MANIFEST.md` |
 
 Two registries for one Family is a *Duplicate at the spec level* and is forbidden.
@@ -118,6 +120,20 @@ answers; it does not produce artifacts.
 A Family that goes meta into software change artifacts (fixes, changelogs, PRs,
 issues, postmortems, design docs, tests, git history) to extract transferable
 lessons.
+
+### Knowledge pack
+A grounded reference corpus derived from one source (book, manual, specification)
+and split into chapters or topics. It answers questions; it does not run a
+procedure. Producer: `book-to-skill`. Lives in `skills/knowledge/`. Registered in
+README + MANIFEST.
+
+### External
+An installed Entity whose content is owned and versioned by a package we do not
+control (Orca, Omarchy, skills.sh). It is **not** vendored: a copy in the vault
+would fork it and pin it to the wrong upstream version. It exists on machines but
+not in `skills/`; its Registry of Record is `registries/_externals.md`, and it
+must carry a re-runnable verify command. Talos reports it as `external`. It is
+not a Corpus Entity — it is furniture we have deliberately catalogued.
 
 ## The properties
 

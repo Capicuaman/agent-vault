@@ -25,8 +25,10 @@ Usage:
   vault-audit.py --installed --repair-missing  # also install missing ones
 
 Talos semantics: a *drifted* copy is an error (it exists and is wrong); a
-*missing* copy is a choice (this machine did not install that skill), and an
-*unmanaged* folder is informational (installed, but not from the vault).
+*missing* copy is a choice (this machine did not install that skill), an
+*external* copy is package-managed and tracked in registries/_externals.md, and
+an *unmanaged* folder is informational (installed, but not from the vault and
+not declared external).
 Install roots default to ~/.agents/skills and ~/.pi/agent/skills, or override
 with --install-roots or $PI_SKILLS_DIRS (path-separator list).
 
@@ -119,6 +121,36 @@ def discover() -> dict[str, dict]:
     return found
 
 
+def load_externals() -> dict[str, dict]:
+    """Names deliberately kept out of the vault, from registries/_externals.md.
+
+    Parsed from the first table column only: | `name` | owner | ... |. Kept
+    intentionally dumb so the registry stays readable and hand-editable.
+    """
+    path = REGISTRIES / "_externals.md"
+    if not path.is_file():
+        return {}
+    out: dict[str, dict] = {}
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not cells:
+            continue
+        match = re.match(r"`([a-z0-9][a-z0-9-]*)`", cells[0])
+        if not match:
+            continue
+        name = match.group(1)
+        if name in out:
+            continue
+        out[name] = {
+            "owner": cells[1] if len(cells) > 1 else "",
+            "source": cells[2] if len(cells) > 2 else "",
+            "verify": cells[3] if len(cells) > 3 else "",
+        }
+    return out
+
+
 def parse_frontmatter(raw: str) -> tuple[dict | None, str | None]:
     if not raw.startswith("---"):
         return None, "no frontmatter"
@@ -205,7 +237,9 @@ def check_ghosts(skills: dict[str, dict]) -> list[dict]:
     explicit anti-examples are ignored, because naming an entity you have not
     built yet is planning, not drift.
     """
-    out, known = [], set(skills)
+    # Names declared external in registries/_externals.md are documented
+    # absence, not drift.
+    out, known = [], set(skills) | set(load_externals())
 
     def scan(path: Path, label: str) -> None:
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -619,21 +653,25 @@ def check_installed(
     return rows
 
 
-def unmanaged(roots: list[Path], skills: dict[str, dict]) -> dict[str, list[str]]:
+def unmanaged(roots: list[Path], skills: dict[str, dict],
+              externals: set[str] | None = None) -> dict[str, list[str]]:
     """Folders installed in a root that the vault does not manage.
 
-    Category folders and containers holding known skills are not unmanaged —
-    they are just a nested layout.
+    Category folders, containers holding known skills, and declared externals
+    are not unmanaged — they are nested layouts and package-managed content.
     """
     found: dict[str, list[str]] = {}
     known = set(skills)
+    externals = externals or set()
     categories = {skill["category"] for skill in skills.values()}
+    containers = categories | {"registries"}
     for root in roots:
         if not root.is_dir():
             continue
         names = []
         for entry in sorted(root.iterdir()):
-            if entry.name.startswith(".") or entry.name in known or entry.name in categories:
+            if (entry.name.startswith(".") or entry.name in known
+                    or entry.name in containers or entry.name in externals):
                 continue
             if not (entry.is_dir() or entry.is_symlink()):
                 continue
@@ -644,7 +682,20 @@ def unmanaged(roots: list[Path], skills: dict[str, dict]) -> dict[str, list[str]
     return found
 
 
-def installed_report(rows: list[dict], roots: list[Path], extra: dict[str, list[str]], short: bool) -> int:
+def external_hits(roots: list[Path], externals: dict[str, dict]) -> dict[str, list[str]]:
+    """Declared externals that are actually installed, per root."""
+    found: dict[str, list[str]] = {}
+    for root in roots:
+        if not root.is_dir():
+            continue
+        names = sorted(entry.name for entry in root.iterdir() if entry.name in externals)
+        if names:
+            found[str(root)] = names
+    return found
+
+
+def installed_report(rows: list[dict], roots: list[Path], extra: dict[str, list[str]],
+                     short: bool, externals: dict[str, list[str]] | None = None) -> int:
     order = ["drift", "diverged", "error", "invalid-name", "repaired", "allowed", "ok", "linked", "missing"]
     if short:
         for row in rows:
@@ -676,9 +727,16 @@ def installed_report(rows: list[dict], roots: list[Path], extra: dict[str, list[
         if any(r["status"] == "diverged" for r in rows):
             print(f"\nintentional exception? add the name to {hint}")
 
+        external_total = sum(len(v) for v in (externals or {}).values())
+        if external_total:
+            print(f"\nexternal {external_total:3d}  — package-managed, declared in registries/_externals.md")
+            for root, names in (externals or {}).items():
+                print(f"   · {root}: {', '.join(names)}")
+
         unmanaged_total = sum(len(v) for v in extra.values())
         if unmanaged_total:
             print(f"\nunmanaged {unmanaged_total:3d}  — installed but not in the vault (informational)")
+            print("             adopt one with scripts/vault-import.sh, or declare it in registries/_externals.md")
             for root, names in extra.items():
                 if names:
                     print(f"   · {root}: {', '.join(names)}")
@@ -788,13 +846,15 @@ def main() -> int:
     if args.installed:
         roots = install_roots(args.install_roots)
         allowed = load_allowlist(allowlist_path(args.allowlist))
+        declared = load_externals()
         rows = check_installed(skills, roots, args.repair, args.repair_missing, args.force, allowed)
-        extra = unmanaged(roots, skills)
+        extra = unmanaged(roots, skills, set(declared))
+        ext = external_hits(roots, declared)
         if args.json:
             print(json.dumps({"roots": [str(r) for r in roots], "results": rows,
-                              "unmanaged": extra}, indent=2))
+                              "external": ext, "unmanaged": extra}, indent=2))
             return 1 if any(r["status"] in ("drift", "diverged", "error", "invalid-name") for r in rows) else 0
-        return installed_report(rows, roots, extra, args.short)
+        return installed_report(rows, roots, extra, args.short, ext)
 
     if args.drift:
         rows = check_drift(skills, args.run_probes, args.max_age)

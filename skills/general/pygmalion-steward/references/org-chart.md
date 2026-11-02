@@ -107,9 +107,15 @@ the intake card.
 | `nerd` | L5 | Operator | `nerd-forge` | `_tech-nerd-pattern.md` |
 | `genie` | L5 | Operator | steward (direct) | `skills/genies/README.md` |
 | `skill` | L5 | Operator | `instruction-skill-forge` or steward | README + MANIFEST |
+| `knowledge-pack` | L5 | Operator | `book-to-skill` | README + MANIFEST |
 | `drill-pack` | L5 | its Forge | `*-drill-forge` | producer's `examples/` |
 | `prompt` | L5 | Operator | Operator | README |
 | `system-prompt` | L4 | Operator | Operator | README |
+| `external` | outside the chart | its package owner | the package | `_externals.md` |
+
+An `external` is catalogued, not governed: the Steward may declare it or retire the
+row, but never owns its content. Promoting an external to a Corpus Entity is a
+fork and needs an intake card that states why the fork will not drift.
 
 ## Reporting lines, stated plainly
 

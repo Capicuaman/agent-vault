@@ -10,16 +10,17 @@ Shared across all Herdr instances via GitHub. Single source of truth.
 | `skills/bilan/` | Brand-specific skills for bilan | 9 |
 | `skills/general/` | Universal workflow & methodology skills | 19 |
 | `skills/genies/` | Software-engineering mastery skills (genies family) | 6 |
+| `skills/knowledge/` | Knowledge packs generated from books/documents (book-to-skill) | 1 |
 | `skills/nerds/` | Expert persona (*-nerd) skills | 5 |
 | `skills/forges/` | Production (*-forge) skills | 6 |
-| `skills/platform/` | Tool/platform integration skills (pi, herdr, graphify) | 5 |
+| `skills/platform/` | Tool/platform integration skills (pi, herdr, graphify, orca, anki) | 6 |
 | `prompts/` | Reusable prompt templates | 15 |
-| `registries/` | Pattern registries (_tech-nerd-pattern, _forge-pattern) | 3 |
+| `registries/` | Pattern registries (_tech-nerd-pattern, _forge-pattern) | 4 |
 | `configs/` | Reference configs (herdr, pi) | 1 |
 | `system-prompts/` | Project-level SYSTEM.md files (agent context) | 1 |
-| `scripts/` | Install, sync, link & audit automation | 5 |
+| `scripts/` | Install, sync, link & audit automation | 7 |
 
-**Total: 50 skills**
+**Total: 52 skills**
 
 ---
 
@@ -57,8 +58,31 @@ cd ~/Documents/agent-vault && ./scripts/vault-install.sh
 # Pull latest from GitHub (run on any instance to get updates)
 ./scripts/vault-sync.sh
 
+# Pull AND reinstall every changed skill
+PI_SKILLS_DIR=~/.agents/skills ./scripts/vault-sync.sh --install
+
 # After editing a skill locally, push changes back
 ./scripts/vault-push.sh "update herdr-nerd with new session attach docs"
+
+# Check that installed copies match the vault (Talos)
+python3 scripts/vault-audit.py --installed
+```
+
+### The three ways a skill can exist
+
+| Situation | Move |
+|---|---|
+| You want to **author** something new | Create `skills/<category>/<name>/SKILL.md`, then `./scripts/vault-manifest.sh --write` |
+| You **already have** a skill installed (authored here) | `./scripts/vault-import.sh <name> --category <cat>` — promotes it, refreshes the live copy, and prints the registry lines |
+| It is **owned upstream** (Orca, distro, skills.sh) | Do **not** vendor it. Add a row to `registries/_externals.md` |
+
+Full decision record and runbook: [`docs/local-skill-integration.md`](docs/local-skill-integration.md).
+
+After any adoption, run the two guards:
+
+```bash
+./scripts/vault-manifest.sh --check        # catalogs match reality
+python3 scripts/vault-audit.py --short     # no zombie/ghost/orphan/hollow
 ```
 
 ---
@@ -146,25 +170,60 @@ Generate, build, or transform artifacts at scale.
 | `workflow-drill-forge` | Turn workflows into gamified drills |
 | `worktree-drill-forge` | Git worktree + Herdr worktree drills |
 
+### `skills/knowledge/` — Knowledge Packs
+Book- and document-derived reference corpora. Producer: `book-to-skill` (general/).
+These answer questions from a grounded source; they do not run procedures.
+
+| Skill | Purpose |
+|-------|---------|
+| `bonanno-game-theory` | Bonanno's game theory: strategic/dynamic games, Nash, beliefs, PBE |
+
 ### `skills/platform/` — Platform Skills
 Tool and platform integrations for the agent stack.
 
 | Skill | Purpose |
 |-------|---------|
+| `anki-admin` | Anki collection admin, FSRS, card quality, drills (script + SOP) |
 | `graphify` | Knowledge graph building and querying |
 | `herdr` | Control Herdr panes, tabs, workspaces |
 | `here-now` | Publish sites and store files in here.now |
 | `pi-agent-helper` | pi, pi-agent, pi-coding-agent configuration |
 | `prior-art` | Find existing popular solutions before building |
 
+### External skills (not vendored)
+
+Some installed skills are owned and versioned upstream. Copying them here would
+fork them and drift. They are listed in the Registry of Record for the `external`
+Family, `registries/_externals.md` (currently Orca's version-matched stubs, the
+skills.sh finder, and the two Omarchy package skills). Talos reports these as
+`external`, not `unmanaged`.
+
 ---
 
 ## Adding a New Skill
 
-1. Create `skills/<category>/<skill-name>/SKILL.md`
-2. Update `MANIFEST.md` (or run `./scripts/vault-manifest.sh` to auto-regenerate)
-3. Run `./scripts/vault-push.sh "add <skill-name>"`
-4. On other instances: `./scripts/vault-sync.sh` + `./scripts/vault-install.sh <skill-name>`
+**Authored here** — `skills/<category>/<name>/SKILL.md`, then:
+
+```bash
+./scripts/vault-manifest.sh --write
+python3 scripts/vault-audit.py --short
+./scripts/vault-push.sh "add <skill-name>"
+```
+
+**Already installed on this machine** — do not copy by hand:
+
+```bash
+./scripts/vault-import.sh <skill-name> --category <category>   # gates + copy + refresh live
+./scripts/vault-manifest.sh --write                             # catalogs
+python3 scripts/vault-audit.py --installed                      # now managed, not unmanaged
+./scripts/vault-push.sh "import <skill-name> into <category>"
+```
+
+**Owned upstream** — add a row to `registries/_externals.md`, never to `skills/`.
+`vault-import.sh` refuses externally-declared names and symlinked skills, so the
+fork-by-accident path is closed.
+
+Other instances pick any of the above up with `./scripts/vault-sync.sh --install`.
 
 ---
 
