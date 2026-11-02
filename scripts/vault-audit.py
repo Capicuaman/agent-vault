@@ -701,6 +701,12 @@ def installed_report(rows: list[dict], roots: list[Path], extra: dict[str, list[
         for row in rows:
             if row["status"] != "missing":
                 print(f"{row['status']:12s} {row['name']:28s} {row['root']} {row['detail']}")
+        for root, names in (externals or {}).items():
+            for name in names:
+                print(f"{'external':12s} {name:28s} {root}")
+        for root, names in extra.items():
+            for name in names:
+                print(f"{'unmanaged':12s} {name:28s} {root}")
     else:
         print("talos — installed copy check\n")
         for root in roots:
