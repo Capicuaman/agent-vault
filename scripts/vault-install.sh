@@ -71,7 +71,7 @@ install_category() {
   local cat_dir="$SKILLS_DIR/$category"
 
   if [[ ! -d "$cat_dir" ]]; then
-    err "category not found: $category (available: bilan, general, nerds, forges, platform)"
+    err "category not found: $category (available: bilan, general, genies, nerds, forges, platform)"
     return 1
   fi
 
@@ -129,24 +129,26 @@ interactive_picker() {
   echo -e "${CYAN}🏛️  Agent Vault — Skill Installer${RESET}"
   echo ""
   echo "Categories:"
-  echo "  1) all      — install everything (40 skills + 15 prompts)"
-  echo "  2) general  — universal workflow skills (15)"
-  echo "  3) nerds    — expert persona skills (5)"
-  echo "  4) forges   — production skills (6)"
-  echo "  5) platform — tool integration skills (5)"
-  echo "  6) bilan    — brand-specific skills (9)"
-  echo "  7) prompts  — prompt templates only (15)"
+  echo "  1) all      — install everything (48 skills + 15 prompts)"
+  echo "  2) general  — universal workflow skills (17)"
+  echo "  3) genies   — software-engineering mastery skills (6)"
+  echo "  4) nerds    — expert persona skills (5)"
+  echo "  5) forges   — production skills (6)"
+  echo "  6) platform — tool integration skills (5)"
+  echo "  7) bilan    — brand-specific skills (9)"
+  echo "  8) prompts  — prompt templates only (15)"
   echo ""
   read -r -p "Enter category name(s) or skill name, or 'all': " choice
 
   case "$choice" in
     all|1)      install_all ;;
     general|2)  install_category general ;;
-    nerds|3)    install_category nerds ;;
-    forges|4)   install_category forges ;;
-    platform|5) install_category platform ;;
-    bilan|6)    install_category bilan ;;
-    prompts|7)
+    genies|3)   install_category genies ;;
+    nerds|4)    install_category nerds ;;
+    forges|5)   install_category forges ;;
+    platform|6) install_category platform ;;
+    bilan|7)    install_category bilan ;;
+    prompts|8)
       mkdir -p "$TARGET_PROMPTS"
       for p in "$PROMPTS_DIR"/*.md; do cp "$p" "$TARGET_PROMPTS/"; done
       ok "prompts installed"
@@ -168,7 +170,7 @@ elif [[ "${ARGS[0]}" == "all" ]]; then
 else
   for arg in "${ARGS[@]}"; do
     case "$arg" in
-      bilan|general|nerds|forges|platform)
+      bilan|general|genies|nerds|forges|platform)
         install_category "$arg"
         ;;
       *)

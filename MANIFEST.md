@@ -2,7 +2,7 @@
 
 Auto-maintained index of all vault content. Last updated manually — run `./scripts/vault-manifest.sh` to regenerate (TODO: build that script).
 
-## Skills (40 total)
+## Skills (48 total)
 
 ### bilan/ (9 skills)
 | Skill | Trigger | Source |
@@ -17,7 +17,7 @@ Auto-maintained index of all vault content. Last updated manually — run `./scr
 | `bilan-seo-conversion` | SEO + CRO audits | ~/.pi/agent/skills |
 | `bilan-webdev` | Astro site architecture and dev | ~/.pi/agent/skills |
 
-### general/ (15 skills)
+### general/ (17 skills)
 | Skill | Trigger | Source |
 |-------|---------|--------|
 | `assumption-space-sync` | Propagate new facts across docs | textDump/.agents/skills |
@@ -35,6 +35,18 @@ Auto-maintained index of all vault content. Last updated manually — run `./scr
 | `tab-triage` | OneTab URL dump processing | textDump/.agents/skills |
 | `technology-teaching` | Best teaching artifact for any tech | textDump/.agents/skills |
 | `tech-onboarding-orchestrator` | One-swoop tech onboarding | textDump/.agents/skills |
+| `book-to-skill` | Convert books/docs into structured skills | textDump/.agents/skills |
+| `meta-prompt-coach` | Coach and improve prompts as artifacts | ~/.pi/agent/skills |
+
+### genies/ (6 skills)
+| Skill | Trigger | Source |
+|-------|---------|--------|
+| `genie-doctrine` | Boundary taxonomy, easy vs hard, drill worksheet | ~/.agents/skills |
+| `genie-read` | Mine changelogs, PRs, issues, postmortems, git | ~/.agents/skills |
+| `genie-error` | Capture/triage/write up your own errors | ~/.agents/skills |
+| `genie-write` | Commit/PR/changelog/bugfix note/postmortem writing | ~/.agents/skills |
+| `genie-review` | Boundary lens on a pending diff or design | ~/.agents/skills |
+| `genie-drill` | Drills, casebooks, Anki conversion, review rituals | ~/.agents/skills |
 
 ### nerds/ (5 skills)
 | Skill | Trigger | Source |

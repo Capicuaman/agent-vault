@@ -8,7 +8,8 @@ Shared across all Herdr instances via GitHub. Single source of truth.
 | Directory | Contents | Count |
 |-----------|----------|-------|
 | `skills/bilan/` | Brand-specific skills for bilan | 9 |
-| `skills/general/` | Universal workflow & methodology skills | 15 |
+| `skills/general/` | Universal workflow & methodology skills | 17 |
+| `skills/genies/` | Software-engineering mastery skills (genies family) | 6 |
 | `skills/nerds/` | Expert persona (*-nerd) skills | 5 |
 | `skills/forges/` | Production (*-forge) skills | 6 |
 | `skills/platform/` | Tool/platform integration skills (pi, herdr, graphify) | 5 |
@@ -18,7 +19,7 @@ Shared across all Herdr instances via GitHub. Single source of truth.
 | `system-prompts/` | Project-level SYSTEM.md files (agent context) | 1 |
 | `scripts/` | Install & sync automation | 3 |
 
-**Total: 40 skills**
+**Total: 48 skills**
 
 ---
 
@@ -86,6 +87,26 @@ Load anywhere, any project.
 | `tab-triage` | Process OneTab URL dumps |
 | `technology-teaching` | Turn docs/repos into the best teaching artifact |
 | `tech-onboarding-orchestrator` | One-swoop onboarding for any new technology |
+| `book-to-skill` | Convert books and documents into structured agent skills |
+| `meta-prompt-coach` | Coach and improve prompts as reusable artifacts |
+
+### `skills/genies/` — Software-Engineering Mastery
+
+Skills that **go meta into the artifacts software leaves behind** — bug fixes,
+changelogs, pull requests and diffs, issue threads, postmortems, design docs,
+tests, and git history. They teach from change, not from the happy path.
+
+| Skill | Purpose |
+|-------|---------|
+| `genie-doctrine` | Shared lens: boundary taxonomy, easy vs hard, the five-step drill |
+| `genie-read` | Mine other people's changes (changelogs, PRs, issues, postmortems, git) |
+| `genie-error` | Capture, fingerprint, and write up your own errors |
+| `genie-write` | Write commit messages, PR bodies, bugfix notes, changelogs, postmortems |
+| `genie-review` | Apply the boundary lens to a pending diff or design |
+| `genie-drill` | Turn lessons into skill: drills, casebooks, Anki cards |
+
+The six install together — the five operational genies reference
+`../genie-doctrine/references/`.
 
 ### `skills/nerds/` — Expert Persona Skills
 Deep-nerd modes for specific tools and platforms.
