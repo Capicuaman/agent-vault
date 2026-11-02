@@ -37,7 +37,7 @@ Auto-maintained index of all vault content. Last updated manually — run `./scr
 | `tech-onboarding-orchestrator` | One-swoop tech onboarding | textDump/.agents/skills |
 | `book-to-skill` | Convert books/docs into structured skills | textDump/.agents/skills |
 | `meta-prompt-coach` | Coach and improve prompts as artifacts | ~/.pi/agent/skills |
-| `pygmalion-doctrine` | Entity lifecycle: evaluate/create/administer/update | ~/.agents/skills |
+| `pygmalion-steward` | Entity intake, decomposition, org chart, audit, drift | ~/.agents/skills |
 
 ### genies/ (6 skills)
 | Skill | Trigger | Source |

@@ -110,7 +110,7 @@ If you cite a version, note the source and date — herdr ships fast. Stable cha
 ## When to hand off
 
 - Deep agent-orchestration design across many agents → also pull in `metaphors-gamification` or `prompt-skill-agent-triage`.
-- Building a webapp/dashboard on top of herdr (e.g. `herdr-mission-control-app`) → also pull in `bilan-webdev` or `impeccable`.
+- Building a webapp/dashboard on top of herdr (for example a herdr mission-control app) → also pull in `bilan-webdev` or `impeccable`.
 - Teaching herdr to someone from scratch → also pull in `technology-teaching` (there's already a `herdr-pattern.md` reference inside that skill).
 - Multi-agent worktree workflow → see `03_RESOURCES/Software_Engineering/DEV/herdr/worktrees.md` and the `worktree-quest-cli/` tool in-repo.
 

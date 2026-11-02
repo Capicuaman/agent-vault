@@ -2,6 +2,7 @@
 
 **Snapshot date:** 2026-10-06
 **Source:** https://bilan.mx (captured via graphify_add → `01_PROJECTS/BILAN/raw/bilan_mx.md`)
+**Probe:** N/A — manual refresh via graphify_add https://bilan.mx
 **Also referenced:** `01_PROJECTS/BILAN/bilan_source_of_truth.{md,json}`, `01_PROJECTS/BILAN/DEPLOY.md`
 
 Treat as snapshot. For "latest" questions, refresh via `graphify_add https://bilan.mx` first.

@@ -1,5 +1,9 @@
 # Herdr facts snapshot
 
+**Snapshot date:** 2026-10-06
+**Declared version:** 0.9.3
+**Probe:** `herdr --version`
+
 **Sources & capture dates:**
 - https://herdr.dev/ — 2026-08-24 (vanity metrics may be stale)
 - https://herdr.dev/docs/ — 2026-10-06

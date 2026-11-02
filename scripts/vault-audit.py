@@ -32,6 +32,8 @@ import difflib
 import json
 import os
 import re
+import shlex
+import subprocess
 import sys
 from collections import defaultdict
 from datetime import date, datetime
@@ -61,6 +63,19 @@ NON_REFERENCE_LINE = re.compile(r"candidate|do not|never|not yet|\bno forge\b|do
 REFERENCE_HEADING = re.compile(
     r"related skills|sibling|see also|companion|hand.?off|consult", re.I)
 PLACEHOLDER_LINK = re.compile(r"^(url|link|path|file|here|target)$", re.I)
+SHELL_META = re.compile(r"[|&;<>`$*?(){}\[\]\\\n]")
+VERSION_TOKEN = re.compile(r"\bv?\d+(?:\.\d+){1,3}(?:[-+][0-9A-Za-z.]+)?\b")
+DECLARED_PATTERNS = [
+    re.compile(r"\*\*Declared version:\*\*\s*`?([^`\s,)]+)", re.I),
+    re.compile(r"Latest stable:\*\*\s*`?([0-9][^\s,`)]*)", re.I),
+    re.compile(r"Latest release at snapshot:\*\*\s*`?([0-9][^\s,`(]*)", re.I),
+    re.compile(r"npm version at snapshot[^\n]*?([0-9]+\.[0-9][0-9A-Za-z.+-]*)", re.I),
+]
+SNAPSHOT_PATTERNS = [
+    re.compile(r"Snapshot date:\*\*\s*[`*]*(\d{4}-\d{2}-\d{2})", re.I),
+    re.compile(r"snapshot date:\s*(\d{4}-\d{2}-\d{2})", re.I),
+]
+PROBE_RE = re.compile(r"\*\*Probe:\*\*\s*(.+)", re.I)
 
 
 # ── discovery ────────────────────────────────────────────────────────────────
@@ -308,6 +323,151 @@ def check_links(skills: dict[str, dict]) -> list[dict]:
     return out
 
 
+def _first(patterns, text: str) -> str | None:
+    for pattern in patterns:
+        match = pattern.search(text)
+        if match:
+            return match.group(1).strip()
+    return None
+
+
+def parse_grounding(skill: dict) -> dict:
+    """Read the declared provenance from a nerd's references/facts.md."""
+    facts = skill["dir"] / "references" / "facts.md"
+    if not facts.exists():
+        return {}
+    text = facts.read_text(encoding="utf-8", errors="replace")
+    probe_raw = _first([PROBE_RE], text) or ""
+    probe = None
+    if probe_raw and "n/a" not in probe_raw.lower():
+        match = re.search(r"`([^`]+)`", probe_raw)
+        probe = match.group(1).strip() if match else probe_raw.strip()
+        if probe.lower().startswith("n/a"):
+            probe = None
+    return {
+        "facts": facts,
+        "snapshot": _first(SNAPSHOT_PATTERNS, text),
+        "declared": _first(DECLARED_PATTERNS, text),
+        "probe": probe,
+        "probe_raw": probe_raw,
+    }
+
+
+def run_probe(command: str) -> tuple[str, str]:
+    """Run a read-only probe. Returns (status, detail)."""
+    if SHELL_META.search(command):
+        return "unsafe-probe", "contains shell metacharacters; run it manually"
+    try:
+        argv = shlex.split(command)
+    except ValueError as exc:
+        return "probe-failed", f"unparseable probe: {exc}"
+    if not argv:
+        return "probe-failed", "empty probe"
+    try:
+        proc = subprocess.run(
+            argv, capture_output=True, text=True, timeout=25, check=False
+        )
+    except FileNotFoundError:
+        return "probe-failed", f"binary not found: {argv[0]}"
+    except subprocess.TimeoutExpired:
+        return "probe-failed", "timed out after 25s"
+    output = (proc.stdout + proc.stderr).strip()
+    if proc.returncode != 0 and not output:
+        return "probe-failed", f"exit {proc.returncode} with no output"
+    return "ok", output
+
+
+def check_drift(skills: dict[str, dict], run: bool, max_age: int) -> list[dict]:
+    """Compare each grounded Entity's declared version to its probe output."""
+    today = date.today()
+    rows = []
+    for skill in skills.values():
+        grounding = parse_grounding(skill)
+        if not grounding:
+            continue
+        snapshot, declared, probe = (
+            grounding["snapshot"], grounding["declared"], grounding["probe"]
+        )
+        # Only sweep Entities that claim to track an upstream: they declare a
+        # version, or they are nerds (whose whole job is grounding).
+        if not declared and not skill["name"].endswith("-nerd"):
+            continue
+        age = None
+        if snapshot:
+            try:
+                age = (today - datetime.strptime(snapshot, "%Y-%m-%d").date()).days
+            except ValueError:
+                age = None
+
+        row = {
+            "name": skill["name"],
+            "snapshot": snapshot or "-",
+            "declared": declared or "-",
+            "probe": probe or ("manual" if "n/a" in grounding["probe_raw"].lower() else "-"),
+            "age": age,
+            "status": "no-probe",
+            "detail": "",
+        }
+
+        if not probe:
+            row["status"] = "manual" if "n/a" in grounding["probe_raw"].lower() else "no-probe"
+            row["detail"] = grounding["probe_raw"] or "no probe declared"
+        elif not run:
+            row["status"] = "planned"
+            row["detail"] = "probe not executed (use --run-probes)"
+        else:
+            status, output = run_probe(probe)
+            if status != "ok":
+                row["status"] = status
+                row["detail"] = output
+            else:
+                current = VERSION_TOKEN.findall(output)
+                current = current[0] if current else ""
+                row["current"] = current or output[:40]
+                if declared and current and current.lstrip("v") == declared.lstrip("v"):
+                    row["status"] = "current"
+                elif declared and current:
+                    row["status"] = "drift"
+                    row["detail"] = f"declared {declared} -> upstream {current}"
+                elif not declared:
+                    row["status"] = "no-declared-version"
+                    row["detail"] = f"probe returned {current or output[:40]}"
+                else:
+                    row["status"] = "probe-failed"
+                    row["detail"] = f"no version token in: {output[:60]}"
+
+        if age is not None and age > max_age and row["status"] in ("current", "planned"):
+            row["status"] = "stale"
+            row["detail"] = f"snapshot {row['snapshot']} is {age}d old"
+        rows.append(row)
+    return sorted(rows, key=lambda r: (r["status"] != "drift", r["name"]))
+
+
+def drift_report(rows: list[dict], short: bool) -> int:
+    order = ["drift", "stale", "no-probe", "manual", "probe-failed", "unsafe-probe",
+             "no-declared-version", "planned", "current"]
+    if short:
+        for row in rows:
+            print(f"{row['status']:18s} {row['name']}: {row['detail'] or row['declared']}")
+    else:
+        print(f"drift sweep — {len(rows)} grounded entities\n")
+        print(f"{'STATUS':18s} {'ENTITY':28s} {'DECLARED':12s} {'SNAPSHOT':12s} PROBE")
+        for row in sorted(rows, key=lambda r: (order.index(r["status"])
+                                               if r["status"] in order else 99,
+                                               r["name"])):
+            print(f"{row['status']:18s} {row['name'][:28]:28s} "
+                  f"{row['declared'][:12]:12s} {row['snapshot'][:12]:12s} {row['probe'][:40]}")
+        drifted = [r for r in rows if r["status"] == "drift"]
+        if drifted:
+            print("\nDrift details:")
+            for row in drifted:
+                print(f"  · {row['name']}: {row['detail']}")
+        planned = [r for r in rows if r["status"] == "planned"]
+        if planned:
+            print(f"\n{len(planned)} probes not executed. Re-run with --run-probes.")
+    return 1 if any(r["status"] == "drift" for r in rows) else 0
+
+
 def check_counts(skills: dict[str, dict]) -> list[dict]:
     out = []
     actual = len(skills)
@@ -325,7 +485,7 @@ def check_counts(skills: dict[str, dict]) -> list[dict]:
 
 # ── reporting ────────────────────────────────────────────────────────────────
 
-ORDER = ["zombie", "duplicate", "ghost", "orphan", "hollow", "stale",
+ORDER = ["zombie", "duplicate", "ghost", "orphan", "hollow", "stale", "drift",
          "zero-byte", "broken-link", "count-drift"]
 LABEL = {
     "zombie": "Zombies (fail to load)",
@@ -334,6 +494,7 @@ LABEL = {
     "orphan": "Orphans (unlisted)",
     "hollow": "Hollow (no substance)",
     "stale": "Stale (outdated grounding)",
+    "drift": "Drift (upstream moved)",
     "zero-byte": "Zero-byte files",
     "broken-link": "Broken links",
     "count-drift": "Catalog count drift",
@@ -375,6 +536,10 @@ def main() -> int:
     parser.add_argument("--short", action="store_true", help="one line per finding")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument("--max-age", type=int, default=180, help="staleness threshold in days")
+    parser.add_argument("--drift", action="store_true",
+                        help="compare declared versions against probes instead of a full audit")
+    parser.add_argument("--run-probes", action="store_true",
+                        help="with --drift: execute declared probes (read-only commands)")
     parser.add_argument("--root", help="vault root (default: script's parent)")
     args = parser.parse_args()
 
@@ -388,6 +553,13 @@ def main() -> int:
     if not skills:
         print(f"vault-audit: no skills found under {SKILLS}", file=sys.stderr)
         return 2
+
+    if args.drift:
+        rows = check_drift(skills, args.run_probes, args.max_age)
+        if args.json:
+            print(json.dumps({"entities": len(rows), "drift": rows}, indent=2))
+            return 1 if any(r["status"] == "drift" for r in rows) else 0
+        return drift_report(rows, args.short)
 
     findings: list[dict] = []
     for check in (

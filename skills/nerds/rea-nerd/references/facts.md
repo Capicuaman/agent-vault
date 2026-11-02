@@ -4,6 +4,8 @@
 **Canonical repo:** https://github.com/morluto/rea  
 **Website:** https://rea.tools/  
 **npm package:** https://www.npmjs.com/package/rea-agents  
+**Declared version:** 6.3.0  
+**Probe:** `npm view rea-agents version`  
 **Local onboarding packet:** `03_RESOURCES/AI/rea/rea-onboarding.md`  
 **Local source snapshot:** `03_RESOURCES/AI/rea/source-snapshots/2026-10-09/`
 

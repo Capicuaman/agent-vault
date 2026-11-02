@@ -2,6 +2,7 @@
 
 Snapshot date: 2026-10-06  
 Primary source: https://github.com/NandhaKishorM/laya  
+**Probe:** `gh api repos/NandhaKishorM/laya/releases/latest -q .tag_name`  
 Local bilan summary: `01_PROJECTS/BILAN/OPERATIONS/laya-ops-non-ops-summary.md`
 
 Treat this as a snapshot. For latest releases, APIs, package names, model limits, or benchmark claims, refresh from the live GitHub repo and docs before answering.

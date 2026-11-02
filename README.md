@@ -23,6 +23,19 @@ Shared across all Herdr instances via GitHub. Single source of truth.
 
 ---
 
+## Entity Governance
+
+The whole corpus is governed by `general/pygmalion-steward`: it receives requests
+for new entities, decides whether one is needed and how many, routes production,
+and audits the portfolio for duplicates, staleness and upstream drift.
+
+- Organization chart: `skills/general/pygmalion-steward/references/org-chart.md`
+- Formal terms: `skills/general/pygmalion-steward/references/glossary.md`
+- Health audit: `python3 scripts/vault-audit.py`
+- Drift sweep: `python3 scripts/vault-audit.py --drift --run-probes`
+
+---
+
 ## Quick Setup on a New Instance
 
 ```bash
@@ -89,7 +102,7 @@ Load anywhere, any project.
 | `tech-onboarding-orchestrator` | One-swoop onboarding for any new technology |
 | `book-to-skill` | Convert books and documents into structured agent skills |
 | `meta-prompt-coach` | Coach and improve prompts as reusable artifacts |
-| `pygmalion-doctrine` | Evaluate, create, administer and update agent entities |
+| `pygmalion-steward` | Entity intake, decomposition, org chart, audit and drift |
 
 ### `skills/genies/` — Software-Engineering Mastery
 

@@ -53,7 +53,7 @@ Activate when the user says things like:
 Use these when relevant:
 
 - `prompt-skill-agent-triage` — for prompt/skill/agent echelon decision.
-- `skill-maker` — for general skill creation patterns.
+- `pygmalion-steward` — for entity intake, decomposition, and creation patterns.
 - `workflow-drill-forge` — if the instruction is about drills, labs, quests, practice, or gamified learning.
 - `metaphors-gamification` — if the skill includes XP, ranks, missions, levels, or game design.
 - `~/.pi/agent/skills/nerd-forge/SKILL.md` — if the result should be a `*-nerd` specialist.

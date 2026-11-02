@@ -1,6 +1,7 @@
 # nerd-forge-nerd — Facts Snapshot
 
 **Snapshot date:** 2026-10-07
+**Probe:** N/A — manual corpus scan (see `patterns.md`)
 **Sources (priority order):**
 1. `~/.pi/agent/skills/nerd-forge/SKILL.md` — the factory spec (authoritative procedure).
 2. `~/.pi/agent/skills/registries/_tech-nerd-pattern.md` — global pattern doc.

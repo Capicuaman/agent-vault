@@ -2,6 +2,8 @@
 
 **Snapshot date:** 2026-10-07
 **Source URL:** https://www.home-assistant.io/
+**Declared version:** 2026.9.4
+**Probe:** `gh api repos/home-assistant/core/releases/latest -q .tag_name`
 **Captured snapshot:** `~/Documents/textDump/01_PROJECTS/BILAN/raw/www_home-assistant_io.md` (captured via `graphify_add`)
 **Local operating docs:** `~/Documents/textDump/02_AREAS/HOME-LAB/AUTOMATION/HOME_ASSISTANT/` and `~/Documents/textDump/02_AREAS/HOME-LAB/SERVICES/`
 
