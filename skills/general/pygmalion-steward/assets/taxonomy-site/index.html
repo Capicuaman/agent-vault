@@ -206,10 +206,12 @@
       <span>source: agent-vault</span>
       <span>governed by <code>pygmalion-steward</code></span>
       <span>audit: <code>vault-audit.py</code></span>
+      <span>snapshot: <a href="../situation-report/index.html">situation report, 2026-11-02</a></span>
     </div>
   </header>
 
   <nav class="toc">
+    <a href="../situation-report/index.html">Situation report →</a>
     <a href="#entity">Entity</a>
     <a href="#laws">Three laws</a>
     <a href="#layers">Layers</a>
@@ -277,7 +279,7 @@
   <!-- FAMILIES -->
   <section id="families">
     <h2>04 — Families</h2>
-    <p class="h2sub">Twelve families, each with one job.</p>
+    <p class="h2sub">Fourteen families, each with one job. Two were added when ownership and book-derived corpora became explicit: <strong>knowledge-pack</strong> and <strong>external</strong>.</p>
     <div class="table-wrap">
       <table>
         <thead>
@@ -291,11 +293,13 @@
           <tr><td><strong>Scout</strong></td><td><code>*-scout</code></td><td>detection</td><td>opportunity cards</td><td><span class="pill ok">yes</span></td></tr>
           <tr><td><strong>Nerd</strong></td><td><code>*-nerd</code></td><td>corpus</td><td>grounded answers</td><td><span class="pill">no</span></td></tr>
           <tr><td><strong>Genie</strong></td><td><code>genie-*</code></td><td>corpus</td><td>transferable lessons</td><td><span class="pill">no</span></td></tr>
+          <tr><td><strong>Knowledge pack</strong></td><td><code>skills/knowledge/&lt;name&gt;</code></td><td>corpus</td><td>grounded reference corpus</td><td><span class="pill">no</span></td></tr>
           <tr><td><strong>Skill</strong></td><td><code>skills/&lt;cat&gt;/&lt;name&gt;/</code></td><td>corpus</td><td>changed behavior</td><td><span class="pill">no</span></td></tr>
           <tr><td><strong>Registry</strong></td><td><code>_*-pattern.md</code></td><td>governance</td><td>conformance</td><td><span class="pill ok">yes</span></td></tr>
           <tr><td><strong>Drill pack</strong></td><td><code>examples/*.md</code></td><td>corpus</td><td>practice</td><td><span class="pill ok">yes</span></td></tr>
           <tr><td><strong>Prompt</strong></td><td><code>prompts/*.md</code></td><td>corpus</td><td>a better first turn</td><td><span class="pill ok">yes</span></td></tr>
           <tr><td><strong>System prompt</strong></td><td><code>system-prompts/*.md</code></td><td>knowledge</td><td>consistent posture</td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td><strong>External</strong></td><td>installed name</td><td>outside the chart</td><td>package-owned content</td><td><span class="pill ok">yes</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -375,7 +379,7 @@ scout ────→ nothing above (detection is already the top)</pre>
       <div class="card"><h3><span class="pill bad">duplicate</span></h3><p>Two entities with ≥85% description overlap. Both route unreliably. Merge or sharpen.</p></div>
       <div class="card"><h3><span class="pill warn">orphan</span></h3><p>Exists but no registry or catalog lists it. Invisible to the next audit.</p></div>
       <div class="card"><h3><span class="pill warn">hollow</span></h3><p>No procedure, no references, no examples. Costs context, returns nothing.</p></div>
-      <div class="card"><h3><span class="pill warn">stale</span></h3><p>Dated grounding past the threshold. Old, but possibly still true.</p></div>
+      <div class="card"><h3><span class="pill warn">stale</span></h3><p>Dated grounding past the threshold. An explicit <code>Last verified:</code> wins; fenced examples and audit-history tables are records, not grounding. Old, but possibly still true.</p></div>
       <div class="card"><h3><span class="pill warn">statue</span></h3><p>Never invoked. Diagnose the trigger before deleting — the description is usually the fault.</p></div>
       <div class="card"><h3><span class="pill warn">drift</span></h3><p>Upstream moved. Loadable, internally consistent, and confidently wrong.</p></div>
     </div>
@@ -419,6 +423,7 @@ scout ────→ nothing above (detection is already the top)</pre>
       <code>scripts/vault-audit.py</code>.
     </p>
     <p>This page is a rendering, not the authority. When it disagrees with the vault, the vault wins.</p>
+    <p>Current state, ownership buckets, Talos and machine inventory: <a href="../situation-report/index.html">situation report</a>.</p>
   </footer>
 
 </div>

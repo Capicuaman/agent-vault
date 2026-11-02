@@ -34,6 +34,8 @@ and audits the portfolio for duplicates, staleness and upstream drift.
 - Formal terms: `skills/general/pygmalion-steward/references/glossary.md`
 - Health audit: `python3 scripts/vault-audit.py`
 - Drift sweep: `python3 scripts/vault-audit.py --drift --run-probes`
+- Rendered taxonomy: `skills/general/pygmalion-steward/assets/taxonomy-site/index.html`
+- Current situation report (corpus, Talos, machine inventory): `skills/general/pygmalion-steward/assets/situation-report/index.html`
 
 ---
 

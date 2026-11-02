@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Skills Situation — Agent Vault Report · 2026-11-02</title>
+<meta name="description" content="Situation report on the agent entity corpus: 52 skills, the three ownership buckets, the entity system, the Talos installed-copy guard, and how the corpus moves between machines.">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --panel: #ffffff;
+    --ink: #1c1b19;
+    --muted: #6b6862;
+    --line: #e5e1d8;
+    --accent: #3f4b8f;
+    --accent-soft: #eef0f8;
+    --warn: #8a5a00;
+    --warn-soft: #fdf3e0;
+    --bad: #8c2f2f;
+    --bad-soft: #fbeceb;
+    --ok: #2f6b45;
+    --ok-soft: #eaf4ee;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+    --measure: 74ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14140f; --panel: #1b1b16; --ink: #eae7de; --muted: #9c978a;
+      --line: #2e2d26; --accent: #a8b3f0; --accent-soft: #1f2130;
+      --warn: #e0b05e; --warn-soft: #2a2318; --bad: #e08a86; --bad-soft: #2b1c1b;
+      --ok: #8fc9a4; --ok-soft: #1a2620;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 96px; }
+  header.hero { padding: 80px 0 36px; border-bottom: 1px solid var(--line); margin-bottom: 36px; }
+  .kicker {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
+  }
+  h1 {
+    font-size: clamp(34px, 5vw, 56px); line-height: 1.05; margin: 0 0 18px;
+    letter-spacing: -0.02em; font-weight: 650;
+  }
+  .lede { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 64ch; margin: 0; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 26px;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
+  .meta span::before { content: "· "; opacity: .5; }
+  .meta span:first-child::before { content: ""; }
+
+  .banner {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: baseline;
+    background: var(--ok-soft); border: 1px solid transparent; border-radius: 8px;
+    padding: 16px 20px; margin: 0 0 48px; font-size: 14px;
+  }
+  .banner strong { color: var(--ok); }
+
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 56px; }
+  nav.toc a {
+    font-size: 13px; color: var(--muted); text-decoration: none;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+    background: var(--panel);
+  }
+  nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+
+  section { margin: 0 0 72px; scroll-margin-top: 24px; }
+  h2 {
+    font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+    font-family: var(--mono); color: var(--muted); font-weight: 500; margin: 0 0 8px;
+  }
+  h2 + .h2sub {
+    font-size: clamp(24px, 3vw, 32px); line-height: 1.2; letter-spacing: -0.015em;
+    margin: 0 0 22px; font-weight: 620; max-width: 38ch;
+  }
+  h3 { font-size: 17px; margin: 36px 0 10px; font-weight: 640; }
+  p, li { max-width: var(--measure); }
+  p { margin: 0 0 18px; }
+  a { color: var(--accent); }
+  code {
+    font-family: var(--mono); font-size: .88em; background: var(--accent-soft);
+    padding: .12em .38em; border-radius: 4px;
+  }
+
+  .stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 8px 0 28px; }
+  .stat {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .stat .n {
+    display: block; font-family: var(--mono); font-size: 34px; line-height: 1;
+    font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .stat .l { font-size: 13px; color: var(--muted); }
+  .stat.good .n { color: var(--ok); }
+  .stat.warn .n { color: var(--warn); }
+
+  .callout {
+    border: 1px solid var(--line); background: var(--panel);
+    border-left: 3px solid var(--accent); border-radius: 6px;
+    padding: 18px 22px; margin: 26px 0; max-width: var(--measure);
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .muted { color: var(--muted); }
+  .callout.risk { border-left-color: var(--warn); }
+  .callout.bad { border-left-color: var(--bad); }
+
+  .grid { display: grid; gap: 14px; }
+  .grid.two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; }
+  .card h3 { margin: 0 0 6px; font-size: 15px; font-weight: 620; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); max-width: none; }
+  .card .num { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .1em; display: block; margin-bottom: 8px; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
+    background: var(--bg); white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  td code { white-space: nowrap; }
+
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap;
+  }
+  .pill.ok { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+  .pill.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+  .pill.bad { color: var(--bad); background: var(--bad-soft); border-color: transparent; }
+
+  .stack { display: grid; gap: 6px; margin: 8px 0 22px; }
+  .layer {
+    display: grid; grid-template-columns: 52px 1fr; align-items: baseline;
+    gap: 14px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 6px; padding: 11px 16px;
+  }
+  .layer .lvl { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .06em; }
+  .layer .role { font-weight: 620; font-size: 14px; }
+  .layer .who { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .layer.l1 { border-color: var(--accent); }
+  .layer.l6 { border-style: dashed; }
+  .layer .who code { background: transparent; padding: 0; font-size: .95em; }
+
+  pre {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.65;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 18px 20px; overflow-x: auto; margin: 18px 0; max-width: 100%;
+  }
+  pre .c { color: var(--muted); }
+  pre .g { color: var(--ok); }
+  pre .w { color: var(--warn); }
+
+  ol.steps { padding-left: 20px; }
+  ol.steps li { margin-bottom: 10px; }
+
+  footer { border-top: 1px solid var(--line); padding-top: 26px; margin-top: 20px; font-size: 13px; color: var(--muted); }
+  footer p { max-width: 74ch; }
+  footer code { background: transparent; padding: 0; }
+
+  @media (max-width: 640px) { header.hero { padding-top: 52px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="kicker">Agent Vault · Situation Report · 2026-11-02</div>
+    <h1>The Skills Situation</h1>
+    <p class="lede">
+      Fifty-two entities, two machines, one registry of record. What the corpus
+      contains, how it is governed, how an installed copy is proven true, and
+      what it takes to move it between machines without forking it by accident.
+    </p>
+    <div class="meta">
+      <span>vault <code>agent-vault</code> @ <code>93332cb</code></span>
+      <span>audit: clean</span>
+      <span>talos: 0 drift</span>
+      <span>snapshot: 2026-11-02</span>
+    </div>
+  </header>
+
+  <div class="banner">
+    <strong>Corpus clean.</strong>
+    <span>52 managed skills · 7 categories · 0 zombies / ghosts / orphans / hollow / stale / duplicates</span>
+    <span>1 allowlisted fork · 6 declared externals · 0 unmanaged on this machine</span>
+  </div>
+
+  <nav class="toc">
+    <a href="#summary">Summary</a>
+    <a href="#buckets">Three buckets</a>
+    <a href="#entity">Entity system</a>
+    <a href="#corpus">Corpus</a>
+    <a href="#talos">Talos</a>
+    <a href="#migration">Migration</a>
+    <a href="#health">Health</a>
+    <a href="#next">Next</a>
+  </nav>
+
+  <!-- SUMMARY -->
+  <section id="summary">
+    <h2>01 — Summary</h2>
+    <p class="h2sub">What exists, what was reconciled, what is still loose.</p>
+    <div class="stats">
+      <div class="stat"><span class="n">52</span><span class="l">managed skills across 7 categories</span></div>
+      <div class="stat good"><span class="n">0</span><span class="l">unresolved audit findings</span></div>
+      <div class="stat"><span class="n">6</span><span class="l">declared externals (never vendored)</span></div>
+      <div class="stat warn"><span class="n">14</span><span class="l">local-only skills on the other machine</span></div>
+    </div>
+    <p>
+      Two things changed the shape of the corpus this pass. First, local-only
+      skills stopped being invisible: skills that live in an install root but not
+      in the vault are now either <strong>adopted</strong> (copied in, made the
+      source of truth, registered) or <strong>declared external</strong> (owned
+      upstream, tracked with a verify command). Second, the catalogs became
+      derived: the manifest and README counts are generated and checked, so an
+      imported skill cannot become an orphan by forgetfulness.
+    </p>
+    <p>
+      The entity system itself did not change. What changed is that the system
+      now has an operational edge: a decision test for ownership, an importer
+      that enforces the gates, and an installed-copy guard (Talos) that can tell
+      the difference between "behind", "forked", "furniture", and "never
+      installed here".
+    </p>
+    <div class="callout">
+      <p><strong>The one sentence.</strong> The vault is the copy of record; every
+      machine's install root is a projection of it; Talos proves the projection;
+      anything the projection has that the vault does not is either adopted,
+      declared external, or allowlisted as a deliberate machine-local fork.</p>
+    </div>
+  </section>
+
+  <!-- BUCKETS -->
+  <section id="buckets">
+    <h2>02 — Ownership</h2>
+    <p class="h2sub">Every installed skill falls into exactly one bucket.</p>
+    <p>
+      The bucket is decided by one question: <em>would a copy in the vault be
+      wrong within one upgrade?</em> If yes, it is external. If no and it is
+      ours, it is owned. If it is ours but this machine intentionally carries a
+      different copy, it is a machine exception.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Bucket</th><th>Test</th><th>Operation</th><th>Guard</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Owned</strong></td>
+            <td>We author it, or it is a durable local artifact (knowledge pack, SOP, script)</td>
+            <td>Adopt into <code>skills/&lt;category&gt;/</code></td>
+            <td>Talos <span class="pill ok">ok</span></td>
+          </tr>
+          <tr>
+            <td><strong>External</strong></td>
+            <td>Content is generated or shipped by a package we install (Orca, Omarchy, skills.sh)</td>
+            <td>Declare in <code>registries/_externals.md</code>, never vendor</td>
+            <td>Talos <span class="pill">external</span></td>
+          </tr>
+          <tr>
+            <td><strong>Machine exception</strong></td>
+            <td>Ours, but this machine deliberately holds a full or forked copy</td>
+            <td>List in <code>~/.config/agent-vault/talos-allowlist.txt</code></td>
+            <td>Talos <span class="pill warn">allowed</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Why externals are not vendored</h3>
+    <p>
+      Orca's <code>orca-cli</code>, <code>orchestration</code>, and
+      <code>computer-use</code> are discovery stubs. They fetch a version-matched
+      guide from the running binary (<code>ORCA skills get &lt;name&gt;</code>),
+      so a vault copy would pin prose to the wrong build. Omarchy's
+      <code>omarchy</code> and <code>diagnose-crash</code> are symlinked out of
+      <code>/usr/share/omarchy</code> and updated by the OS.
+      <code>find-skills</code> exists to drive <code>npx skills</code>, the package
+      manager that already owns it. The registry stores owner, install path, and a
+      re-runnable verify command for each.
+    </p>
+    <h3>What "adopt" means mechanically</h3>
+    <p>
+      <code>vault-import.sh</code> refuses symlinks and declared externals,
+      validates that the frontmatter name matches the directory and the
+      description is long enough to route on, scans for secrets and other users'
+      absolute home paths, copies with <code>.git</code> and
+      <code>node_modules</code> excluded, and then refreshes the live copy from
+      the vault. The vault is the source of truth from that moment, not the
+      machine.
+    </p>
+  </section>
+
+  <!-- ENTITY SYSTEM -->
+  <section id="entity">
+    <h2>03 — The entity system</h2>
+    <p class="h2sub">An entity is a file that changes behavior at the moment of use.</p>
+    <p>
+      Five conditions make something an entity rather than a draft: a unique
+      kebab-case identity matching its directory; a routing contract (the
+      description); a body (procedure, lens, or procedure with examples); exactly
+      one home scope; and one registry line. The full reference is the
+      <a href="../taxonomy-site/index.html">taxonomy site</a>.
+    </p>
+    <div class="stack">
+      <div class="layer"><span class="lvl">L0</span><div><span class="role">Operator</span><span class="who">intent · approval · trust</span></div></div>
+      <div class="layer l1"><span class="lvl">L1</span><div><span class="role">Governance</span><span class="who"><code>pygmalion-steward</code> · <code>registries/_*-pattern.md</code></span></div></div>
+      <div class="layer"><span class="lvl">L2</span><div><span class="role">Production</span><span class="who">forges — <code>nerd-forge</code>, <code>instruction-skill-forge</code>, <code>prompt-pattern-forge</code>, <code>book-to-skill</code></span></div></div>
+      <div class="layer"><span class="lvl">L3</span><div><span class="role">Detection</span><span class="who">scouts — <code>forge-scout</code></span></div></div>
+      <div class="layer"><span class="lvl">L4</span><div><span class="role">Knowledge</span><span class="who">doctrines · system prompts · prompt patterns</span></div></div>
+      <div class="layer"><span class="lvl">L5</span><div><span class="role">Corpus</span><span class="who">nerds · genies · skills · knowledge packs · drill packs · prompts</span></div></div>
+      <div class="layer l6"><span class="lvl">L6</span><div><span class="role">Audit</span><span class="who">forge-nerds — keep a corpus true, amend the spec</span></div></div>
+    </div>
+    <h3>Families (14)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Family</th><th>Naming</th><th>Role</th><th>Produces</th><th>Registry of record</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Steward</strong></td><td><code>*-steward</code></td><td>governance</td><td>decisions, intake cards</td><td>README + MANIFEST</td></tr>
+          <tr><td><strong>Doctrine</strong></td><td><code>*-doctrine</code></td><td>knowledge</td><td>judgment</td><td>README + MANIFEST</td></tr>
+          <tr><td><strong>Forge</strong></td><td><code>*-forge</code>, <code>book-to-skill</code></td><td>production</td><td>artifacts to a declared shape</td><td><code>_forge-pattern.md</code></td></tr>
+          <tr><td><strong>Forge-nerd</strong></td><td><code>*-forge-nerd</code></td><td>audit</td><td>audits, spec amendments</td><td><code>_forge-pattern.md</code></td></tr>
+          <tr><td><strong>Scout</strong></td><td><code>*-scout</code></td><td>detection</td><td>opportunity cards</td><td><code>_tech-nerd-pattern.md</code></td></tr>
+          <tr><td><strong>Nerd</strong></td><td><code>*-nerd</code></td><td>corpus</td><td>grounded answers</td><td><code>_tech-nerd-pattern.md</code></td></tr>
+          <tr><td><strong>Genie</strong></td><td><code>genie-*</code></td><td>corpus</td><td>transferable lessons</td><td>README + MANIFEST</td></tr>
+          <tr><td><strong>Knowledge pack</strong></td><td><code>skills/knowledge/&lt;name&gt;</code></td><td>corpus</td><td>grounded reference corpus</td><td>README + MANIFEST</td></tr>
+          <tr><td><strong>Skill</strong></td><td><code>skills/&lt;cat&gt;/&lt;name&gt;/</code></td><td>corpus</td><td>changed behavior</td><td>README + MANIFEST</td></tr>
+          <tr><td><strong>Drill pack</strong></td><td><code>examples/*.md</code></td><td>corpus</td><td>practice</td><td>producer's <code>examples/</code></td></tr>
+          <tr><td><strong>Prompt</strong></td><td><code>prompts/*.md</code></td><td>corpus</td><td>a better first turn</td><td>README</td></tr>
+          <tr><td><strong>System prompt</strong></td><td><code>system-prompts/*.md</code></td><td>knowledge</td><td>consistent posture</td><td>README</td></tr>
+          <tr><td><strong>Registry</strong></td><td><code>_*-pattern.md</code></td><td>governance</td><td>conformance</td><td>itself</td></tr>
+          <tr><td><strong>External</strong></td><td>installed name</td><td>outside the chart</td><td>package-owned content</td><td><code>_externals.md</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <p><strong>The producer rule.</strong> A producer may produce corpus entities
+      that sit below it. It may never produce producers or governance. And an
+      external is catalogued, not governed: promoting one to a corpus entity is a
+      fork and needs an intake card that says why the fork will not drift.</p>
+    </div>
+  </section>
+
+  <!-- CORPUS -->
+  <section id="corpus">
+    <h2>04 — The corpus today</h2>
+    <p class="h2sub">Fifty-two skills, seven categories, one new home for books.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Category</th><th class="num">Count</th><th>What is in it</th></tr></thead>
+        <tbody>
+          <tr><td><code>skills/bilan/</code></td><td class="num">9</td><td>Brand and site skills; <code>bilan-label-system</code> rebuilt this pass against the YAML SSOT</td></tr>
+          <tr><td><code>skills/general/</code></td><td class="num">19</td><td>Universal workflows, governance (<code>pygmalion-steward</code>), producers (<code>book-to-skill</code>)</td></tr>
+          <tr><td><code>skills/genies/</code></td><td class="num">6</td><td>The software-change lens: doctrine, read, error, write, review, drill</td></tr>
+          <tr><td><code>skills/knowledge/</code></td><td class="num">1</td><td>Book-derived reference packs — <code>bonanno-game-theory</code> (new category)</td></tr>
+          <tr><td><code>skills/nerds/</code></td><td class="num">5</td><td>Expert personas for one technology each</td></tr>
+          <tr><td><code>skills/forges/</code></td><td class="num">6</td><td>Producers with declared output shapes</td></tr>
+          <tr><td><code>skills/platform/</code></td><td class="num">6</td><td>Tool integrations — <code>anki-admin</code> (adopted), here.now, herdr, graphify, pi</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid two">
+      <div class="card"><h3>Also in the vault</h3><p>15 prompts · 4 registries (<code>_externals</code> added) · 1 config reference · 1 system prompt · 7 scripts (import and manifest tooling added).</p></div>
+      <div class="card"><h3>What changed this pass</h3><p>Adopted <code>anki-admin</code> and <code>bonanno-game-theory</code>; rebuilt <code>bilan-label-system</code>; made staleness precise; added import, manifest, and externals tooling.</p></div>
+    </div>
+    <div class="callout risk">
+      <p><strong>Remaining ownership question.</strong>
+      <code>here-now</code> is a vendored snapshot of the upstream package
+      <code>heredotnow/skill</code> v1.15.3. It now states its provenance and
+      update path. Under the strict bucket rule it should be external; it stays
+      vendored because the vault wants its scripts. Revisit if upstream churn
+      starts to matter.</p>
+    </div>
+  </section>
+
+  <!-- TALOS -->
+  <section id="talos">
+    <h2>05 — Talos</h2>
+    <p class="h2sub">The installed-copy guard: prove the projection, never guess.</p>
+    <p>
+      <code>vault-audit.py --installed</code> compares every vault skill against
+      every install root by content hash. It is named for the bronze automaton
+      that patrolled Crete: it walks the perimeter, states what it finds, and does
+      not repair what it cannot understand.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status</th><th>Meaning</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill ok">ok</span></td><td>Installed copy is byte-identical to the vault</td><td>none</td></tr>
+          <tr><td><span class="pill ok">linked</span></td><td>Symlink resolves to content identical to the vault</td><td>none</td></tr>
+          <tr><td><span class="pill">repaired</span></td><td>Copy was replaced or installed during this run</td><td>none</td></tr>
+          <tr><td><span class="pill bad">drift</span></td><td>Copy exists and differs; no extra files. The vault moved on</td><td><code>--repair</code></td></tr>
+          <tr><td><span class="pill bad">diverged</span></td><td>Copy holds files the vault does not — a fork or fuller checkout</td><td>human; <code>--force</code> only if intended</td></tr>
+          <tr><td><span class="pill warn">allowed</span></td><td>Divergence declared deliberate in the machine allowlist</td><td>none; keep the list short</td></tr>
+          <tr><td><span class="pill">external</span></td><td>Installed and declared package-managed in <code>_externals.md</code></td><td>none; verify upstream</td></tr>
+          <tr><td><span class="pill">missing</span></td><td>Not installed on this machine</td><td>A choice, not an error; install on demand</td></tr>
+          <tr><td><span class="pill warn">unmanaged</span></td><td>Installed, not in the vault, not declared external</td><td>adopt or declare</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Rules it will not break</h3>
+    <ul>
+      <li>It never guesses: a name containing a path separator is refused, so a repair cannot write outside the install root.</li>
+      <li>It never deletes a superset: a copy with extra files is <code>diverged</code>, not stale, and <code>--repair</code> leaves it alone without <code>--force</code>.</li>
+      <li>It never repairs an allowlisted fork: the allowlist is checked before repair.</li>
+      <li>It is read-only by contract in every mode except an explicit <code>--repair*</code>.</li>
+    </ul>
+    <p>
+      Roots default to <code>~/.agents/skills</code> and
+      <code>~/.pi/agent/skills</code>, overridable with
+      <code>--install-roots</code> or <code>$PI_SKILLS_DIRS</code>. Nested layouts
+      are found too: a skill may live flat (<code>&lt;root&gt;/&lt;name&gt;</code>)
+      or inside a category folder (<code>&lt;root&gt;/&lt;category&gt;/&lt;name&gt;</code>).
+    </p>
+    <h3>This machine, right now</h3>
+<pre><span class="c">$ python3 scripts/vault-audit.py --installed --short</span>
+ok           ...  51 skills        <span class="g">// content matches the vault</span>
+allowed      book-to-skill         <span class="w">// full upstream checkout, machine-local by design</span>
+external     computer-use · diagnose-crash · find-skills · omarchy · orca-cli · orchestration
+missing      ...  52 skills        <span class="c">// not installed in ~/.pi/agent/skills here (a choice)</span>
+<span class="c">// 0 drift · 0 diverged · 0 unmanaged</span></pre>
+    <p>
+      The two roots are not symmetrical on purpose: this machine installs the
+      corpus into <code>~/.agents/skills</code> and lets
+      <code>~/.pi/agent/skills</code> hold only the package symlinks and the
+      pattern registries. <code>missing</code> at the second root is the honest
+      description of that policy.
+    </p>
+  </section>
+
+  <!-- MIGRATION -->
+  <section id="migration">
+    <h2>06 — Migration across machines</h2>
+    <p class="h2sub">The vault is the source; each machine is a projection with a receipt.</p>
+    <p>
+      A skill moves in one direction: author or adopt on the machine where it is
+      edited, push to GitHub, pull on every other machine, then let Talos prove
+      the install. The install root is never edited in place as the copy of
+      record.
+    </p>
+<pre>author / adopt ──▶ vault clone ──▶ git push ──▶ GitHub
+                                               │
+                        ┌──────────────────────┴──────────────────────┐
+                        ▼                                             ▼
+              alien-omarchy                                  manjaro-inspiron7548
+              git pull --rebase                              git pull --rebase
+              vault-sync --install                           vault-sync --install
+              talos --installed                              talos --installed
+                        │                                             │
+                        └────────────── drift? repair ◀────────────────┘</pre>
+
+    <h3>Machine inventory (as observed 2026-11-02)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Machine</th><th>Vault clone</th><th>Install roots</th><th>State</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>alien-omarchy</strong><br><span class="pill ok">this machine</span></td>
+            <td><code>~/Documents/agent-vault</code><br>@ <code>93332cb</code></td>
+            <td><code>~/.agents/skills</code> (corpus)<br><code>~/.pi/agent/skills</code> (registries + package symlinks)</td>
+            <td>52 managed: 51 ok, 1 allowed. 6 externals. 0 unmanaged. 0 drift.</td>
+          </tr>
+          <tr>
+            <td><strong>manjaro-inspiron7548</strong><br><span class="muted">"zapata" in scripts</span></td>
+            <td><code>~/Documents/agent-vault</code><br>@ <code>f89375c</code> — 3 commits behind at snapshot</td>
+            <td><code>~/.pi/agent/skills</code> (17 skills + registries)<br><code>~/.agents/skills</code> (12 skills)</td>
+            <td>14 vault skills installed; <strong>14 local-only skills</strong> not yet adopted; no Talos allowlist file.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The gap on the other machine is the same problem this pass solved here:
+      eleven <code>hyperframes-*</code> skills plus <code>media-use</code> and
+      <code>terminal-browser</code> in <code>~/.agents/skills</code>, and
+      <code>alicia-nerd</code>, <code>roku-nerd</code>, and
+      <code>theme-randomizer</code> in <code>~/.pi/agent/skills</code>. They load,
+      but the vault has never seen them. The next sync should classify each one:
+      adopt (and register) or declare external (and verify).
+    </p>
+
+    <h3>Runbook</h3>
+    <ol class="steps">
+      <li><strong>Author here.</strong> Create <code>skills/&lt;category&gt;/&lt;name&gt;/SKILL.md</code>, then <code>vault-manifest.sh --write</code>, <code>vault-audit.py --short</code>, and push.</li>
+      <li><strong>Adopt something already installed.</strong> <code>vault-import.sh &lt;name&gt; --category &lt;cat&gt;</code> runs the gates, copies, and refreshes the live copy from the vault.</li>
+      <li><strong>Declare upstream furniture.</strong> Add a row to <code>registries/_externals.md</code> with owner, install path, and a re-runnable verify command. Never import it.</li>
+      <li><strong>Pull everywhere else.</strong> <code>PI_SKILLS_DIR=~/.agents/skills ./scripts/vault-sync.sh --install</code>, then <code>python3 scripts/vault-audit.py --installed</code>.</li>
+      <li><strong>Before every push.</strong> <code>./scripts/vault-manifest.sh --check &amp;&amp; python3 scripts/vault-audit.py --short</code>.</li>
+    </ol>
+    <div class="callout">
+      <p><strong>Why the other machine is read over SSHFS.</strong> Project-scoped
+      grounding (the bilan packaging tree, the live site repo) lives on
+      <code>manjaro-inspiron7548</code>. This machine mounts its home at
+      <code>~/remote-manjaro</code> read/write, so verification can read the real
+      files instead of trusting a summary. The mount is a reference, not an
+      install root — nothing in the vault is written there except through git.</p>
+    </div>
+  </section>
+
+  <!-- HEALTH -->
+  <section id="health">
+    <h2>07 — Health and the four fixes</h2>
+    <p class="h2sub">Eight states. Four findings closed. Two were never real.</p>
+    <div class="grid two">
+      <div class="card"><h3><span class="pill bad">zombie</span></h3><p>Fails to load — bad YAML, missing description, name ≠ directory.</p></div>
+      <div class="card"><h3><span class="pill bad">ghost</span></h3><p>Something references an entity that does not exist.</p></div>
+      <div class="card"><h3><span class="pill bad">duplicate</span></h3><p>Two entities with ≥85% description overlap. Merge or sharpen.</p></div>
+      <div class="card"><h3><span class="pill warn">orphan</span></h3><p>Exists but no registry or catalog lists it.</p></div>
+      <div class="card"><h3><span class="pill warn">hollow</span></h3><p>No procedure, no references, no examples. Costs context, returns nothing.</p></div>
+      <div class="card"><h3><span class="pill warn">stale</span></h3><p>Dated grounding past the threshold. Explicit <code>Last verified:</code> wins; fenced examples and audit-history tables are records, not grounding.</p></div>
+      <div class="card"><h3><span class="pill warn">statue</span></h3><p>Never invoked. Usually the trigger's fault, not the body's.</p></div>
+      <div class="card"><h3><span class="pill warn">drift</span></h3><p>Upstream moved. Loadable, consistent, confidently wrong. Test with a probe.</p></div>
+    </div>
+    <h3>Closed this pass</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Finding</th><th>What it really was</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><code>bilan-label-system</code> <span class="pill warn">hollow</span></td><td>138-word stub pointing at project files that had moved on</td><td>Rebuilt against the current YAML SSOT, with checklists, contracts, and a change-brief template</td></tr>
+          <tr><td><code>bilan-blog-ops</code> <span class="pill warn">stale</span></td><td>Oldest date was example frontmatter inside a fence</td><td>Checker precision + declared <code>Last verified</code></td></tr>
+          <tr><td><code>bilan-seo-conversion</code> <span class="pill warn">stale</span></td><td>Oldest date was a past audit record</td><td>Checker precision + corrected archive location</td></tr>
+          <tr><td><code>here-now</code> <span class="pill warn">stale</span></td><td>Oldest date was a JSON <code>expiresAt</code> example</td><td>Checker precision + script command surface verified</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The staleness rule is now: strip fenced code and history sections, honor an
+      explicit <code>Last verified:</code> / <code>Grounding date:</code> /
+      <code>Snapshot date:</code>, and only fall back to the oldest prose date
+      when none is declared. A date in a record is not a claim about today.
+    </p>
+  </section>
+
+  <!-- NEXT -->
+  <section id="next">
+    <h2>08 — Next</h2>
+    <p class="h2sub">What is still loose, in priority order.</p>
+    <ol class="steps">
+      <li><strong>Sync and classify zapata.</strong> Pull the three commits, run Talos, then adopt or declare each of the 14 local-only skills. The <code>hyperframes</code> family looks like a candidate consistency set — one family, not eleven separate decisions.</li>
+      <li><strong>Decide <code>here-now</code>.</strong> Vendored with provenance today; move it to externals if upstream churn matters.</li>
+      <li><strong>Put the guards in front of the push.</strong> <code>vault-manifest.sh --check</code> and <code>vault-audit.py --short</code> are manual. A pre-push hook would make them structural.</li>
+      <li><strong>Remember what dates cannot see.</strong> Grounding that moves without anyone bumping <code>Last verified:</code> stays green. Probes catch drift; dates catch neglect. Both are needed.</li>
+    </ol>
+  </section>
+
+  <footer>
+    <p>
+      Source of truth: <code>agent-vault</code> at <code>93332cb</code>.
+      Entity system: <code>skills/general/pygmalion-steward/references/</code>
+      (<code>taxonomy.md</code>, <code>glossary.md</code>, <code>org-chart.md</code>,
+      <a href="../taxonomy-site/index.html">rendered taxonomy</a>).
+      Ownership and migration: <code>docs/local-skill-integration.md</code>.
+      Externals: <code>registries/_externals.md</code>. Guards:
+      <code>scripts/vault-audit.py</code>, <code>scripts/vault-import.sh</code>,
+      <code>scripts/vault-manifest.sh</code>.
+    </p>
+    <p>
+      Snapshot taken 2026-11-02. This page is a rendering, not the authority. When
+      it disagrees with the vault, the vault wins — and the audit will say so.
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

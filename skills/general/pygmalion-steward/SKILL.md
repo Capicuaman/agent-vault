@@ -158,10 +158,17 @@ Full procedures: [`references/administer.md`](references/administer.md) and
 
 ## Rendered reference
 
-A self-contained HTML rendering of the taxonomy, layers, families, producer rule,
-health states and glossary lives at
-[`assets/taxonomy-site/index.html`](assets/taxonomy-site/index.html). Publish it
-with the `here-now` skill; the vault copy is the source of truth.
+Two self-contained HTML renderings live under `assets/`:
+
+- [`assets/taxonomy-site/index.html`](assets/taxonomy-site/index.html) — the
+  reference: taxonomy, layers, families, producer rule, health states, glossary.
+- [`assets/situation-report/index.html`](assets/situation-report/index.html) —
+  the dated snapshot: corpus counts, ownership buckets, Talos statuses, machine
+  inventory and migration runbook.
+
+Update the situation report at the end of each audit pass (the date and the
+numbers are part of it), and keep both consistent with the registries. Publish
+either with the `here-now` skill; the vault copy is the source of truth.
 
 ## Hand-offs
 
