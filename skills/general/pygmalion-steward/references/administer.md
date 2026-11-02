@@ -70,9 +70,15 @@ and the skill was silently dead. Cost: invisible. Fix: one quoting change.
 **Fix:** build it, or rewrite the reference to a real owner. Prefer building only
 if the reference is load-bearing.
 
-**Real cases found by the audit:** `skill-maker` (referenced by
-`instruction-skill-forge`), `herdr-mission-control-app` (referenced by
-`herdr-nerd`'s hand-off section).
+**Real cases (both since fixed):** `skill-maker`, referenced by
+`instruction-skill-forge` but never built — the reference was repointed to
+`pygmalion-steward`. And `herdr-mission-control-app`, which was never a skill at
+all but a project path written in backticks; the correct fix was punctuation, not
+creation. The audit cannot tell a backticked path from a backticked name, so the
+Steward must.
+
+**Lesson:** a Ghost is a claim about existence. Before building the missing thing,
+check whether the reference meant an Entity or a path.
 
 ### 3. Duplicate — overlapping triggers
 

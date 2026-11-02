@@ -2,7 +2,7 @@
 
 Auto-maintained index of all vault content. Last updated manually — run `./scripts/vault-manifest.sh` to regenerate (TODO: build that script).
 
-## Skills (49 total)
+## Skills (50 total)
 
 ### bilan/ (9 skills)
 | Skill | Trigger | Source |
@@ -17,7 +17,7 @@ Auto-maintained index of all vault content. Last updated manually — run `./scr
 | `bilan-seo-conversion` | SEO + CRO audits | ~/.pi/agent/skills |
 | `bilan-webdev` | Astro site architecture and dev | ~/.pi/agent/skills |
 
-### general/ (18 skills)
+### general/ (19 skills)
 | Skill | Trigger | Source |
 |-------|---------|--------|
 | `assumption-space-sync` | Propagate new facts across docs | textDump/.agents/skills |
@@ -38,6 +38,7 @@ Auto-maintained index of all vault content. Last updated manually — run `./scr
 | `book-to-skill` | Convert books/docs into structured skills | textDump/.agents/skills |
 | `meta-prompt-coach` | Coach and improve prompts as artifacts | ~/.pi/agent/skills |
 | `pygmalion-steward` | Entity intake, decomposition, org chart, audit, drift | ~/.agents/skills |
+| `orientation-drill` | Audit a summary's claims, then drill for orientation | ~/.agents/skills |
 
 ### genies/ (6 skills)
 | Skill | Trigger | Source |

@@ -8,7 +8,7 @@ Shared across all Herdr instances via GitHub. Single source of truth.
 | Directory | Contents | Count |
 |-----------|----------|-------|
 | `skills/bilan/` | Brand-specific skills for bilan | 9 |
-| `skills/general/` | Universal workflow & methodology skills | 18 |
+| `skills/general/` | Universal workflow & methodology skills | 19 |
 | `skills/genies/` | Software-engineering mastery skills (genies family) | 6 |
 | `skills/nerds/` | Expert persona (*-nerd) skills | 5 |
 | `skills/forges/` | Production (*-forge) skills | 6 |
@@ -19,7 +19,7 @@ Shared across all Herdr instances via GitHub. Single source of truth.
 | `system-prompts/` | Project-level SYSTEM.md files (agent context) | 1 |
 | `scripts/` | Install, sync, link & audit automation | 5 |
 
-**Total: 49 skills**
+**Total: 50 skills**
 
 ---
 
@@ -103,6 +103,7 @@ Load anywhere, any project.
 | `book-to-skill` | Convert books and documents into structured agent skills |
 | `meta-prompt-coach` | Coach and improve prompts as reusable artifacts |
 | `pygmalion-steward` | Entity intake, decomposition, org chart, audit and drift |
+| `orientation-drill` | Verify a summary against evidence, then drill for bearings |
 
 ### `skills/genies/` — Software-Engineering Mastery
 
