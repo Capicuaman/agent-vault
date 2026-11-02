@@ -7,10 +7,14 @@
 #
 # Safe: backs up each dir to <dir>.bak before replacing with symlink.
 # Idempotent: skips dirs that are already symlinks.
+#
+# The vault may live anywhere (a local clone, an SSHFS mount, a worktree).
+# Override with VAULT_DIR; the script refuses to guess.
+#   VAULT_DIR=~/remote-manjaro/Documents/agent-vault ./scripts/vault-link-zapata.sh
 
 set -euo pipefail
 
-VAULT="$HOME/Documents/agent-vault"
+VAULT="${VAULT_DIR:-$HOME/Documents/agent-vault}"
 ERRORS=0
 LINKED=0
 SKIPPED=0
@@ -20,6 +24,14 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 RED='\033[0;31m'
 RESET='\033[0m'
+
+# Fail loudly: a wrong vault path silently links nothing (or links garbage).
+if [[ ! -d "$VAULT/skills" ]]; then
+  echo -e "${RED}✗ vault not found:${RESET} $VAULT" >&2
+  echo "  Expected a directory containing skills/." >&2
+  echo "  Set VAULT_DIR=/path/to/agent-vault and re-run." >&2
+  exit 1
+fi
 
 link_skill() {
   local live_dir="$1"     # e.g. ~/.pi/agent/skills/herdr-nerd
