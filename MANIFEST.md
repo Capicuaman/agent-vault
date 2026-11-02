@@ -38,7 +38,7 @@ Auto-maintained index of all vault content. Last updated manually — run `./scr
 | `book-to-skill` | Convert books/docs into structured skills | textDump/.agents/skills |
 | `meta-prompt-coach` | Coach and improve prompts as artifacts | ~/.pi/agent/skills |
 | `pygmalion-steward` | Entity intake, decomposition, org chart, audit, drift | ~/.agents/skills |
-| `orientation-drill` | Audit a summary's claims, then drill for orientation | ~/.agents/skills |
+| `grill-me` | One-question-at-a-time interrogation (test or extract) | ~/.agents/skills |
 
 ### genies/ (6 skills)
 | Skill | Trigger | Source |

@@ -103,7 +103,7 @@ Load anywhere, any project.
 | `book-to-skill` | Convert books and documents into structured agent skills |
 | `meta-prompt-coach` | Coach and improve prompts as reusable artifacts |
 | `pygmalion-steward` | Entity intake, decomposition, org chart, audit and drift |
-| `orientation-drill` | Verify a summary against evidence, then drill for bearings |
+| `grill-me` | Interrogate: one question at a time, to test or extract |
 
 ### `skills/genies/` — Software-Engineering Mastery
 
