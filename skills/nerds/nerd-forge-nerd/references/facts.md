@@ -5,7 +5,7 @@
 **Sources (priority order):**
 1. `~/.pi/agent/skills/nerd-forge/SKILL.md` — the factory spec (authoritative procedure).
 2. `~/.pi/agent/skills/registries/_tech-nerd-pattern.md` — global pattern doc.
-3. `~/Documents/textDump/.pi/skills/registries/_tech-nerd-pattern.md` — project pattern doc.
+3. `~/.pi/agent/skills/registries/_tech-nerd-pattern.md` — global pattern doc. (No project registry exists at present: textDump's project nerd corpus was consolidated into the vault on 2026-11-04.)
 4. Every existing `*-nerd` and `*-forge` skill on disk (the empirical corpus).
 
 Treat as snapshot. Re-audit by running the "corpus scan" pattern in `patterns.md`.
@@ -42,7 +42,7 @@ The forge-nerd tier is **recursive-safe**: it does not spawn more forge-nerds. O
 | `~/.pi/agent/skills/<name>/` (global) | the nerd/forge is useful across every project |
 | `<project>/.pi/skills/<name>/` (project) | references cite project-local paths; or the tech only matters in that project |
 
-**Promotion is a real motion.** `nerd-forge` lived at `~/Documents/textDump/.pi/skills/nerd-forge/` and was promoted to global, leaving a `.nerd-forge.moved-to-global` marker. When you promote, strip project-local path references from `facts.md`/`patterns.md` first — the global version must be self-contained.
+**Promotion is a real motion.** `nerd-forge` lived at `~/Documents/textDump/.pi/skills/nerd-forge/` and was promoted to global, leaving a `.nerd-forge.moved-to-global` marker. When you promote, strip project-local path references from `facts.md`/`patterns.md` first — the global version must be self-contained — **and delete the project copy in the same move**: pi searches project roots before user roots, so a leftover copy keeps winning over the promoted one.
 
 ## Current nerd corpus (as of snapshot date)
 
@@ -60,7 +60,7 @@ The forge-nerd tier is **recursive-safe**: it does not spawn more forge-nerds. O
 | Path | Scope |
 |---|---|
 | `~/.pi/agent/skills/registries/_tech-nerd-pattern.md` | global corpus registry |
-| `~/Documents/textDump/.pi/skills/registries/_tech-nerd-pattern.md` | project corpus registry |
+| `~/.pi/agent/skills/registries/_tech-nerd-pattern.md` | corpus registry (global; no project registry exists at present) |
 
 Both exist and both must list the nerds they host. Project doc should NOT list global nerds (and vice versa) — each is a registry for its own install location. When auditing, confirm every nerd on disk appears in exactly one doc.
 

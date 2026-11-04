@@ -26,13 +26,16 @@ crontab -l 2>/dev/null | grep -q journal_agent && echo "ENABLED" || echo "DISABL
 ```
 
 ### Enable the cron agent
+Paths below are relative to this skill's directory (resolve them against the
+`<location>` given when the skill was loaded, normally
+`~/.agents/skills/daily-journal/`):
 ```bash
-/home/capicuaman/Documents/textDump/.agents/skills/daily-journal/scripts/enable-cron.sh
+scripts/enable-cron.sh
 ```
 
 ### Disable the cron agent
 ```bash
-/home/capicuaman/Documents/textDump/.agents/skills/daily-journal/scripts/disable-cron.sh
+scripts/disable-cron.sh
 ```
 
 ### Run agent manually (one-shot, no cron needed)
@@ -199,6 +202,6 @@ After writing:
 | Journal template | `/home/capicuaman/Documents/textDump/05_JOURNAL/daily-note-template.md` |
 | Agent script | `/home/capicuaman/Documents/textDump/03_RESOURCES/Workflow_Automation/journal_automation/journal_agent.py` |
 | Agent config | `/home/capicuaman/Documents/textDump/03_RESOURCES/Workflow_Automation/journal_automation/config.json` |
-| Cron enable | `/home/capicuaman/Documents/textDump/.agents/skills/daily-journal/scripts/enable-cron.sh` |
-| Cron disable | `/home/capicuaman/Documents/textDump/.agents/skills/daily-journal/scripts/disable-cron.sh` |
+| Cron enable | `scripts/enable-cron.sh` (skill-relative) |
+| Cron disable | `scripts/disable-cron.sh` (skill-relative) |
 | Cron log | `/home/capicuaman/Documents/textDump/03_RESOURCES/Workflow_Automation/journal_automation/cron.log` |

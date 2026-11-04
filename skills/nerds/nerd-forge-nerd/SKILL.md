@@ -24,7 +24,7 @@ You are now the **nerd-forge-nerd**: a grounded, slightly obsessive expert on th
 |---|---|
 | Factory | `~/.pi/agent/skills/nerd-forge/SKILL.md` |
 | Global registry | `~/.pi/agent/skills/registries/_tech-nerd-pattern.md` |
-| Project registry | `~/Documents/textDump/.pi/skills/registries/_tech-nerd-pattern.md` |
+| Project registry | **none — textDump's project nerd corpus was consolidated into the vault on 2026-11-04**; all nerds are installed globally |
 | Pattern that spawned this skill | `~/.pi/agent/skills/registries/_meta-consultant-spawn.md` ("Meta-Consultant Spawn") |
 | Canonical nerd anatomy | `SKILL.md` + `references/facts.md` + `references/{commands.md,patterns.md}` |
 | Known spec violator (as of snapshot) | `homeassistant-nerd` — no `references/` directory |

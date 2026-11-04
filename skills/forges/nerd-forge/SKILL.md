@@ -154,4 +154,6 @@ State the activation triggers out loud: "This nerd will fire on: X, Y, Z, and 'n
 
 For the template summary and the running list of built + candidate nerds, see `_tech-nerd-pattern.md` next to this skill (`~/.pi/agent/skills/registries/_tech-nerd-pattern.md` globally, or `.pi/skills/registries/_tech-nerd-pattern.md` in a project).
 
-**Canonical example:** `herdr-nerd` as implemented in `~/Documents/textDump/.pi/skills/herdr-nerd/` (project-scoped because its `references/` cite textDump-local paths like `03_RESOURCES/Software_Engineering/DEV/herdr/`). For a nerd that should work in any repo, keep `references/` self-contained — cite URLs, not repo-local paths.
+**Canonical example:** `herdr-nerd` (`~/.agents/skills/herdr-nerd/`). It was originally project-scoped because its `references/` cite textDump-local paths like `03_RESOURCES/Software_Engineering/DEV/herdr/`; it now lives in the vault, so those paths only resolve when the agent is working inside textDump. For a nerd that should work in any repo, keep `references/` self-contained — cite URLs, not repo-local paths.
+
+**Precedence warning:** pi resolves skill names first-discovery-wins and searches project roots *before* user roots. A project copy therefore silently overrides the vault-installed copy. When you promote a project skill to the vault, delete the project copy in the same move and leave a `.<name>.moved-to-global` marker; otherwise the stale fork keeps winning. Audit with `03_RESOURCES/Workflow_Automation/skill-roots/audit_skill_roots.py`.

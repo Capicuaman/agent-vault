@@ -12,12 +12,14 @@ Transforms a messy OneTab dump into structured knowledge routed into the right P
 ## Phase 1 — Parse & Clean
 
 ### Step 1: Clean tracking params from URLs
+`scripts/clean-urls.py` is relative to this skill's directory (normally
+`~/.agents/skills/tab-triage/`).
 ```bash
-echo "<paste>" | python3 /home/capicuaman/Documents/textDump/.agents/skills/tab-triage/scripts/clean-urls.py
+echo "<paste>" | python3 scripts/clean-urls.py
 ```
 Or save the dump to `/tmp/onetab-raw.txt` first:
 ```bash
-python3 /home/capicuaman/Documents/textDump/.agents/skills/tab-triage/scripts/clean-urls.py /tmp/onetab-raw.txt
+python3 scripts/clean-urls.py /tmp/onetab-raw.txt
 ```
 
 ### Step 2: Classify noise immediately — no analysis needed
@@ -168,6 +170,6 @@ Gemini sessions (`gemini.google.com/app/[id]`) are often not revisitable without
 
 | Script | Path |
 |--------|------|
-| URL cleaner | `/home/capicuaman/Documents/textDump/.agents/skills/tab-triage/scripts/clean-urls.py` |
+| URL cleaner | `scripts/clean-urls.py` (skill-relative) |
 | Onetab output dir | `/home/capicuaman/Documents/textDump/03_RESOURCES/Knowledge_Management/onetab/` |
 | Today's journal | `/home/capicuaman/Documents/textDump/05_JOURNAL/daily-$(date +%Y-%m-%d).md` |
